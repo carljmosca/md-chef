@@ -27,9 +27,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, onOpe
               <span className="font-serif font-bold text-xl text-stone-900 dark:text-stone-100 tracking-tight">
                 MD-Chef
               </span>
-              <span className="text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded bg-brand-100 text-brand-800 dark:bg-brand-900/50 dark:text-brand-300">
-                Git PWA
-              </span>
             </div>
             <p className="text-[11px] text-stone-500 dark:text-stone-400 font-medium hidden sm:block">
               {recipes.length} offline recipes

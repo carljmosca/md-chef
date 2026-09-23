@@ -12,6 +12,7 @@ import { MealPlannerView } from './components/meals/MealPlannerView';
 import { ShoppingListView } from './components/shopping/ShoppingListView';
 import { SettingsView } from './components/settings/SettingsView';
 import { QuickSearchModal } from './components/common/QuickSearchModal';
+import { InstallPrompt } from './components/common/InstallPrompt';
 
 const AppContent: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<'recipes' | 'meals' | 'shopping' | 'favorites' | 'settings'>('recipes');
@@ -116,6 +117,9 @@ const AppContent: React.FC = () => {
         currentTab={currentTab}
         setCurrentTab={handleTabChange}
       />
+
+      {/* PWA Install Prompt Banner (iOS & Android) */}
+      <InstallPrompt />
     </div>
   );
 };

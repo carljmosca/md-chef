@@ -414,6 +414,27 @@ export const SettingsView: React.FC = () => {
           </div>
         </div>
 
+        <div className="flex items-center justify-between pt-2 border-t border-stone-100 dark:border-stone-800">
+          <div>
+            <span className="font-bold text-stone-800 dark:text-stone-200 block text-xs">
+              PWA App Installation Guide
+            </span>
+            <span className="text-stone-500 dark:text-stone-400 text-[11px]">
+              Prompt to install on iPhone, iPad, Android, or Desktop
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.removeItem('md_chef_dismiss_install_prompt');
+              window.location.reload();
+            }}
+            className="px-3 py-1.5 rounded-xl border border-brand-300 dark:border-brand-800 bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 hover:bg-brand-100 text-xs font-semibold transition-colors"
+          >
+            Show Install Guide
+          </button>
+        </div>
+
         <div className="pt-2 border-t border-stone-100 dark:border-stone-800 flex justify-end">
           <button
             type="button"
