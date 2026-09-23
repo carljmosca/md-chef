@@ -10,7 +10,8 @@ import {
   ShieldCheck,
   AlertCircle,
   RotateCcw,
-  ExternalLink
+  ExternalLink,
+  Download
 } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
 import { useRecipes } from '../../context/RecipeContext';
@@ -417,21 +418,22 @@ export const SettingsView: React.FC = () => {
         <div className="flex items-center justify-between pt-2 border-t border-stone-100 dark:border-stone-800">
           <div>
             <span className="font-bold text-stone-800 dark:text-stone-200 block text-xs">
-              PWA App Installation Guide
+              Install MD-Chef Application
             </span>
             <span className="text-stone-500 dark:text-stone-400 text-[11px]">
-              Prompt to install on iPhone, iPad, Android, or Desktop
+              Install on macOS Chrome, Windows, iOS, or Android
             </span>
           </div>
           <button
             type="button"
             onClick={() => {
               localStorage.removeItem('md_chef_dismiss_install_prompt');
-              window.location.reload();
+              window.dispatchEvent(new CustomEvent('md-chef:request-install'));
             }}
-            className="px-3 py-1.5 rounded-xl border border-brand-300 dark:border-brand-800 bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 hover:bg-brand-100 text-xs font-semibold transition-colors"
+            className="px-3.5 py-1.5 rounded-xl border border-brand-300 dark:border-brand-800 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/40 dark:hover:bg-brand-900/60 text-brand-700 dark:text-brand-300 text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-2xs"
           >
-            Show Install Guide
+            <Download className="w-3.5 h-3.5" />
+            <span>Install / Prompt</span>
           </button>
         </div>
 

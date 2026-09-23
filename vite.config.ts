@@ -7,8 +7,20 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'chef-hat.svg'],
+      devOptions: {
+        enabled: true
+      },
+      includeAssets: [
+        'chef-hat.svg',
+        'apple-touch-icon.png',
+        'pwa-192x192.png',
+        'pwa-512x512.png',
+        'pwa-maskable-512x512.png',
+        'pwa-192x192.svg',
+        'pwa-512x512.svg'
+      ],
       manifest: {
+        id: '/',
         name: 'MD-Chef Recipe Companion',
         short_name: 'MD-Chef',
         description: 'Sleek Markdown Recipe Cook, Meal Planner & Shopping Companion with Git Sync',
@@ -16,16 +28,39 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait-primary',
+        start_url: '/',
+        scope: '/',
+        categories: ['food', 'lifestyle', 'utilities'],
         icons: [
           {
-            src: 'pwa-192x192.svg',
+            src: '/pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/svg+xml'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: 'pwa-512x512.svg',
+            src: '/pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/svg+xml'
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/pwa-maskable-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: '/pwa-192x192.svg',
+            sizes: '192x192',
+            type: 'image/svg+xml',
+            purpose: 'any'
+          },
+          {
+            src: '/pwa-512x512.svg',
+            sizes: '512x512',
+            type: 'image/svg+xml',
+            purpose: 'any'
           }
         ]
       },

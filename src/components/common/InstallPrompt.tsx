@@ -16,21 +16,18 @@ export const InstallPrompt: React.FC = () => {
       return;
     }
 
-    // 2. Check if user dismissed prompt previously in this session or last 7 days
+    // Check if dismissed in last 7 days
     const dismissedAt = localStorage.getItem('md_chef_dismiss_install_prompt');
-    if (dismissedAt) {
-      const daysSince = (Date.now() - parseInt(dismissedAt, 10)) / (1000 * 60 * 60 * 24);
-      if (daysSince < 7) {
-        return;
-      }
-    }
+    const isDismissed = dismissedAt
+      ? (Date.now() - parseInt(dismissedAt, 10)) / (1000 * 60 * 60 * 24) < 7
+      : false;
 
-    // 3. Detect iOS device
+    // 2. Detect iOS device
     const isIOS =
       /iPad|iPhone|iPod/.test(navigator.userAgent) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-    if (isIOS) {
+    if (isIOS && !isDismissed) {
       // Delay slightly so user sees the page first
       const timer = setTimeout(() => {
         setShowIOSPrompt(true);
@@ -38,16 +35,39 @@ export const InstallPrompt: React.FC = () => {
       return () => clearTimeout(timer);
     }
 
-    // 4. For Android / Chrome / Edge: Listen to beforeinstallprompt event
+    // 3. For Android / Chrome / Edge: Listen to beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setShowNativePrompt(true);
+      if (!isDismissed) {
+        setShowNativePrompt(true);
+      }
+    };
+
+    const handleCustomInstallRequest = () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choice: any) => {
+          if (choice.outcome === 'accepted') {
+            setShowNativePrompt(false);
+            setDeferredPrompt(null);
+          }
+        });
+      } else if (isIOS) {
+        setShowIOSPrompt(true);
+      } else {
+        setShowNativePrompt(true);
+      }
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  }, []);
+    window.addEventListener('md-chef:request-install', handleCustomInstallRequest);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('md-chef:request-install', handleCustomInstallRequest);
+    };
+  }, [deferredPrompt]);
 
   const handleDismiss = () => {
     setShowIOSPrompt(false);
@@ -56,7 +76,10 @@ export const InstallPrompt: React.FC = () => {
   };
 
   const handleNativeInstall = async () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      setShowNativePrompt(false);
+      return;
+    }
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {

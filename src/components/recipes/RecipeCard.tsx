@@ -16,7 +16,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
   onCook,
   onToggleFavorite
 }) => {
-  const { title, prep_time, cook_time, servings, difficulty, tags } = recipe.frontmatter;
+  const { title, prep_time, cook_time, servings, difficulty, tags, credit, source } = recipe.frontmatter;
 
   // Category color accents
   const getCategoryColor = (cat: string) => {
@@ -81,9 +81,27 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
         </div>
 
         {/* Title */}
-        <h3 className="font-serif font-bold text-lg text-stone-900 dark:text-stone-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2 leading-snug mb-2">
+        <h3 className="font-serif font-bold text-lg text-stone-900 dark:text-stone-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2 leading-snug mb-1">
           {title}
         </h3>
+
+        {(credit || source) && (
+          <p className="text-xs text-stone-500 dark:text-stone-400 mb-2 truncate">
+            by{' '}
+            <span className="font-medium text-stone-700 dark:text-stone-300">
+              {credit ||
+                (/^https?:\/\//i.test(source!)
+                  ? (() => {
+                      try {
+                        return new URL(source!).hostname.replace(/^www\./, '');
+                      } catch {
+                        return 'Source';
+                      }
+                    })()
+                  : source)}
+            </span>
+          </p>
+        )}
 
         {/* Meta Stats: Time, Servings, Difficulty */}
         <div className="flex flex-wrap items-center gap-y-2 gap-x-3 text-xs text-stone-500 dark:text-stone-400 mb-4">

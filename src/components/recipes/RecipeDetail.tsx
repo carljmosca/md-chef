@@ -16,7 +16,9 @@ import {
   Minus,
   Timer as TimerIcon,
   FileCode,
-  RotateCcw
+  RotateCcw,
+  User,
+  Globe
 } from 'lucide-react';
 import { Recipe } from '../../types/recipe';
 import { Badge } from '../common/Badge';
@@ -275,6 +277,48 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
           <p className="text-stone-600 dark:text-stone-300 text-sm sm:text-base leading-relaxed">
             {recipe.frontmatter.description}
           </p>
+        )}
+
+        {/* Prominent Attribution: Credit & Source */}
+        {(recipe.frontmatter.credit || recipe.frontmatter.source) && (
+          <div className="flex flex-wrap items-center gap-2.5 pt-1 text-xs">
+            {recipe.frontmatter.credit && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 rounded-lg border border-stone-200 dark:border-stone-700/80 font-medium shadow-2xs">
+                <User className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
+                <span>Credit: <strong className="text-stone-900 dark:text-stone-100 font-semibold">{recipe.frontmatter.credit}</strong></span>
+              </span>
+            )}
+            {recipe.frontmatter.source && (
+              /^https?:\/\//i.test(recipe.frontmatter.source) ? (
+                <a
+                  href={recipe.frontmatter.source}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-50/80 dark:bg-brand-950/40 hover:bg-brand-100 dark:hover:bg-brand-900/60 text-brand-700 dark:text-brand-300 rounded-lg border border-brand-200 dark:border-brand-800/80 font-medium transition-colors shadow-2xs group"
+                >
+                  <Globe className="w-3.5 h-3.5 shrink-0" />
+                  <span>
+                    Source:{' '}
+                    <span className="underline decoration-brand-400 underline-offset-2">
+                      {(() => {
+                        try {
+                          return new URL(recipe.frontmatter.source).hostname.replace(/^www\./, '');
+                        } catch {
+                          return 'Website';
+                        }
+                      })()}
+                    </span>
+                  </span>
+                  <ExternalLink className="w-3 h-3 opacity-70 group-hover:opacity-100 transition-opacity shrink-0" />
+                </a>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 rounded-lg border border-stone-200 dark:border-stone-700/80 font-medium shadow-2xs">
+                  <Globe className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                  <span>Source: <strong className="text-stone-900 dark:text-stone-100 font-semibold">{recipe.frontmatter.source}</strong></span>
+                </span>
+              )
+            )}
+          </div>
         )}
 
         {/* Recipe Quick Metrics Bar */}
@@ -548,20 +592,24 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
 
       {/* Recipe Footer: Source Credit & Raw Markdown Toggle */}
       <footer className="pt-6 border-t border-stone-200 dark:border-stone-800 flex flex-wrap items-center justify-between gap-4 text-xs text-stone-500 dark:text-stone-400">
-        <div>
+        <div className="flex flex-wrap items-center gap-3">
           {recipe.frontmatter.credit && (
             <span>Recipe Credit: <strong className="text-stone-700 dark:text-stone-300">{recipe.frontmatter.credit}</strong></span>
           )}
-          {recipe.frontmatter.source && /^https?:\/\//i.test(recipe.frontmatter.source) && (
-            <a
-              href={recipe.frontmatter.source}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ml-3 text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1"
-            >
-              <span>Original Source</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
+          {recipe.frontmatter.source && (
+            /^https?:\/\//i.test(recipe.frontmatter.source) ? (
+              <a
+                href={recipe.frontmatter.source}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1"
+              >
+                <span>Original Source</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            ) : (
+              <span>Source: <strong className="text-stone-700 dark:text-stone-300">{recipe.frontmatter.source}</strong></span>
+            )
           )}
         </div>
 

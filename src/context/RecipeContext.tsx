@@ -252,8 +252,18 @@ export const RecipeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const categoryMatch = r.category.toLowerCase().includes(q);
         const ingredientMatch = r.ingredients.some((ing) => ing.raw.toLowerCase().includes(q));
         const instructionMatch = r.instructions.some((inst) => inst.text.toLowerCase().includes(q));
+        const creditMatch = r.frontmatter.credit?.toLowerCase().includes(q);
+        const sourceMatch = r.frontmatter.source?.toLowerCase().includes(q);
 
-        if (!titleMatch && !tagMatch && !categoryMatch && !ingredientMatch && !instructionMatch) {
+        if (
+          !titleMatch &&
+          !tagMatch &&
+          !categoryMatch &&
+          !ingredientMatch &&
+          !instructionMatch &&
+          !creditMatch &&
+          !sourceMatch
+        ) {
           return false;
         }
       }

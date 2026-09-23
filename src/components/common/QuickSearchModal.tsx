@@ -48,7 +48,9 @@ export const QuickSearchModal: React.FC<QuickSearchModalProps> = ({
         const catMatch = r.category.toLowerCase().includes(q);
         const tagMatch = r.frontmatter.tags?.some((t) => t.toLowerCase().includes(q));
         const ingMatch = r.ingredients.some((ing) => ing.raw.toLowerCase().includes(q));
-        return titleMatch || catMatch || tagMatch || ingMatch;
+        const creditMatch = r.frontmatter.credit?.toLowerCase().includes(q);
+        const sourceMatch = r.frontmatter.source?.toLowerCase().includes(q);
+        return titleMatch || catMatch || tagMatch || ingMatch || creditMatch || sourceMatch;
       })
     : recipes.slice(0, 8);
 
@@ -97,6 +99,14 @@ export const QuickSearchModal: React.FC<QuickSearchModalProps> = ({
                     <span className="text-[11px] font-semibold text-brand-700 dark:text-brand-300">
                       {r.category}
                     </span>
+                    {r.frontmatter.credit && (
+                      <>
+                        <span className="text-stone-300 dark:text-stone-700">•</span>
+                        <span className="text-[11px] text-stone-500 dark:text-stone-400">
+                          by {r.frontmatter.credit}
+                        </span>
+                      </>
+                    )}
                     <span className="text-stone-300 dark:text-stone-700">•</span>
                     <span className="text-[11px] text-stone-400">
                       {r.ingredients.length} ingredients
