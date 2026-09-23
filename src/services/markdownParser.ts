@@ -56,6 +56,9 @@ export function extractFrontmatter(rawContent: string): {
     const kvMatch = line.match(/^([a-zA-Z0-9_-]+):\s*(.*)$/);
     if (kvMatch) {
       const key = kvMatch[1].trim();
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+        continue;
+      }
       const val = kvMatch[2].trim();
 
       if (val === '') {

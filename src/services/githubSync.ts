@@ -170,7 +170,13 @@ export async function syncWithGitHub(
       if (blobRes.ok) {
         const blobJson = await blobRes.json();
         if (blobJson.encoding === 'base64') {
-          rawMarkdown = decodeURIComponent(escape(atob(blobJson.content.replace(/\s/g, ''))));
+          try {
+            const binary = atob(blobJson.content.replace(/\s/g, ''));
+            const bytes = Uint8Array.from(binary, (m) => m.charCodeAt(0));
+            rawMarkdown = new TextDecoder('utf-8').decode(bytes);
+          } catch {
+            rawMarkdown = atob(blobJson.content.replace(/\s/g, ''));
+          }
         }
       }
     }

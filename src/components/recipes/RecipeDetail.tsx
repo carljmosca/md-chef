@@ -552,11 +552,11 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
           {recipe.frontmatter.credit && (
             <span>Recipe Credit: <strong className="text-stone-700 dark:text-stone-300">{recipe.frontmatter.credit}</strong></span>
           )}
-          {recipe.frontmatter.source && (
+          {recipe.frontmatter.source && /^https?:\/\//i.test(recipe.frontmatter.source) && (
             <a
               href={recipe.frontmatter.source}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="ml-3 text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1"
             >
               <span>Original Source</span>

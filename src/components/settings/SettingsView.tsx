@@ -154,7 +154,7 @@ export const SettingsView: React.FC = () => {
               <a
                 href={`https://github.com/${settings.repoOwner}/${settings.repoName}/commit/${syncState.stats.lastCommitSha}`}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="font-mono font-bold text-xs text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 mt-0.5"
               >
                 <span>{syncState.stats.lastCommitSha.slice(0, 7)}</span>
