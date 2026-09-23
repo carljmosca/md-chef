@@ -6,6 +6,7 @@ import {
   Volume2,
   VolumeX,
   Check,
+  CheckSquare,
   Eye,
   ListFilter,
   RotateCcw,
@@ -29,6 +30,7 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [activeTimers, setActiveTimers] = useState<DetectedTimer[]>([]);
   const [showIngredientsDrawer, setShowIngredientsDrawer] = useState(false);
+  const [showStepsDrawer, setShowStepsDrawer] = useState(false);
   const [isWakeLockActive, setIsWakeLockActive] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isFinishedCooking, setIsFinishedCooking] = useState(false);
@@ -185,9 +187,31 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
 
         {/* Action icons right */}
         <div className="flex items-center gap-2">
+          {/* Steps Checklist Toggle */}
+          <button
+            onClick={() => {
+              setShowStepsDrawer(!showStepsDrawer);
+              setShowIngredientsDrawer(false);
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
+              showStepsDrawer
+                ? 'bg-brand-600 border-brand-500 text-white'
+                : 'bg-stone-800 border-stone-700 text-stone-300 hover:bg-stone-700'
+            }`}
+            title="View all steps checklist"
+          >
+            <CheckSquare className="w-4 h-4" />
+            <span className="hidden sm:inline">
+              Steps ({completedSteps.size}/{steps.length})
+            </span>
+          </button>
+
           {/* Ingredients Quick Sheet Toggle */}
           <button
-            onClick={() => setShowIngredientsDrawer(!showIngredientsDrawer)}
+            onClick={() => {
+              setShowIngredientsDrawer(!showIngredientsDrawer);
+              setShowStepsDrawer(false);
+            }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
               showIngredientsDrawer
                 ? 'bg-brand-600 border-brand-500 text-white'
@@ -267,16 +291,21 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
             <>
               <div className="space-y-6 my-auto">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-brand-500">
-                    Step {currentStepIndex + 1} of {steps.length}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-brand-500">
+                      Step {currentStepIndex + 1} of {steps.length}
+                    </span>
+                    <span className="text-xs text-stone-500 font-medium">
+                      ({completedSteps.size} of {steps.length} completed)
+                    </span>
+                  </div>
 
                   <button
                     onClick={() => handleStepCompleteToggle(currentStepIndex)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
                       completedSteps.has(currentStepIndex)
                         ? 'bg-emerald-600 border-emerald-500 text-white'
-                        : 'bg-stone-900 border-stone-800 text-stone-400 hover:text-stone-200'
+                        : 'bg-stone-900 border-stone-800 text-stone-300 hover:text-white hover:border-stone-700'
                     }`}
                   >
                     <Check className="w-4 h-4" />
@@ -286,14 +315,52 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
                   </button>
                 </div>
 
-                {/* Big Step Instruction Text */}
-                <p className="font-serif text-2xl sm:text-4xl text-stone-100 leading-relaxed sm:leading-relaxed font-medium">
-                  {currentStep?.text}
-                </p>
+                {/* Big Step Instruction Card with Interactive Checkbox */}
+                <div
+                  onClick={() => handleStepCompleteToggle(currentStepIndex)}
+                  className={`p-6 sm:p-8 rounded-3xl border transition-all cursor-pointer group flex items-start gap-4 sm:gap-6 ${
+                    completedSteps.has(currentStepIndex)
+                      ? 'bg-emerald-950/20 border-emerald-500/40 text-stone-200 shadow-sm'
+                      : 'bg-stone-900/70 border-stone-800 text-stone-100 hover:border-stone-700'
+                  }`}
+                >
+                  {/* Large tactile Checkbox */}
+                  <div
+                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl border-2 flex items-center justify-center shrink-0 mt-1 transition-all ${
+                      completedSteps.has(currentStepIndex)
+                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-500/30'
+                        : 'border-stone-500 bg-stone-800/80 group-hover:border-brand-500 text-transparent'
+                    }`}
+                    title={completedSteps.has(currentStepIndex) ? 'Mark step incomplete' : 'Mark step complete'}
+                  >
+                    <Check className="w-5 h-5 sm:w-6 sm:h-6 stroke-[3]" />
+                  </div>
+
+                  <div className="space-y-3 flex-1">
+                    <p className={`font-serif text-2xl sm:text-4xl leading-relaxed sm:leading-relaxed font-medium transition-colors ${
+                      completedSteps.has(currentStepIndex)
+                        ? 'text-stone-300'
+                        : 'text-stone-100'
+                    }`}>
+                      {currentStep?.text}
+                    </p>
+
+                    {completedSteps.has(currentStepIndex) ? (
+                      <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2.5 py-1 rounded-full">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        <span>Step completed!</span>
+                      </div>
+                    ) : (
+                      <span className="text-[11px] text-stone-500 block">
+                        Tap here or the checkbox to mark this step completed
+                      </span>
+                    )}
+                  </div>
+                </div>
 
                 {/* Timers in this Step */}
                 {activeTimers.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     {activeTimers.map((timer, i) => (
                       <CookingTimer
                         key={`${currentStepIndex}-${i}`}
@@ -370,6 +437,90 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
                   • {ing.raw}
                 </div>
               ))}
+            </div>
+          </aside>
+        )}
+
+        {/* Slide-out All Steps Checklist Drawer */}
+        {showStepsDrawer && (
+          <aside className="w-80 sm:w-96 bg-stone-900 border-l border-stone-800 flex flex-col h-full shadow-2xl z-20 animate-in slide-in-from-right duration-200">
+            <div className="p-4 border-b border-stone-800 flex items-center justify-between">
+              <div>
+                <h3 className="font-serif font-bold text-base text-white">All Steps Checklist</h3>
+                <span className="text-xs text-stone-400">
+                  {completedSteps.size} of {steps.length} completed
+                </span>
+              </div>
+              <button
+                onClick={() => setShowStepsDrawer(false)}
+                className="p-1 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 divide-y divide-stone-800/60">
+              {steps.map((step, idx) => {
+                const isDone = completedSteps.has(idx);
+                const isCurrent = idx === currentStepIndex;
+
+                return (
+                  <div
+                    key={step.id}
+                    onClick={() => {
+                      setCurrentStepIndex(idx);
+                    }}
+                    className={`pt-3 pb-2 px-3 rounded-2xl cursor-pointer transition-colors flex items-start gap-3.5 ${
+                      isCurrent
+                        ? 'bg-stone-800/90 border border-brand-500/60'
+                        : 'hover:bg-stone-800/50'
+                    }`}
+                  >
+                    {/* Interactive Step Checkbox */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStepCompleteToggle(idx);
+                      }}
+                      className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${
+                        isDone
+                          ? 'bg-emerald-500 border-emerald-500 text-white shadow-xs'
+                          : 'border-stone-500 bg-stone-950 hover:border-brand-500'
+                      }`}
+                      title={isDone ? 'Mark incomplete' : 'Mark complete'}
+                    >
+                      {isDone && <Check className="w-4 h-4 stroke-[3]" />}
+                    </button>
+
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span
+                          className={`text-xs font-bold ${
+                            isCurrent
+                              ? 'text-brand-400'
+                              : isDone
+                              ? 'text-emerald-400'
+                              : 'text-stone-400'
+                          }`}
+                        >
+                          Step {idx + 1} {isCurrent && '• Current'}
+                        </span>
+                        {isDone && (
+                          <span className="text-[10px] text-emerald-400 font-semibold">Done</span>
+                        )}
+                      </div>
+                      <p
+                        className={`text-xs sm:text-sm leading-snug line-clamp-3 transition-colors ${
+                          isDone ? 'text-stone-500 line-through' : 'text-stone-200'
+                        }`}
+                      >
+                        {step.text}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </aside>
         )}

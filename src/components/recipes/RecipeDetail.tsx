@@ -15,7 +15,8 @@ import {
   Plus,
   Minus,
   Timer as TimerIcon,
-  FileCode
+  FileCode,
+  RotateCcw
 } from 'lucide-react';
 import { Recipe } from '../../types/recipe';
 import { Badge } from '../common/Badge';
@@ -42,6 +43,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   const baseServings = recipe.frontmatter.servings || 4;
   const [servings, setServings] = useState<number>(baseServings);
   const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
+  const [checkedSteps, setCheckedSteps] = useState<Set<number>>(new Set());
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [showMealPlanMenu, setShowMealPlanMenu] = useState(false);
   const [showRawMarkdown, setShowRawMarkdown] = useState(false);
@@ -55,6 +57,13 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
     if (next.has(id)) next.delete(id);
     else next.add(id);
     setCheckedIngredients(next);
+  };
+
+  const toggleStepCheck = (idx: number) => {
+    const next = new Set(checkedSteps);
+    if (next.has(idx)) next.delete(idx);
+    else next.add(idx);
+    setCheckedSteps(next);
   };
 
   const handleAddAllToCart = async () => {
@@ -355,12 +364,25 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
         {/* Ingredients Column (5 cols) */}
         <section className="lg:col-span-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-serif font-bold text-xl text-stone-900 dark:text-stone-100 flex items-center gap-2">
-              <span>Ingredients</span>
-              <span className="text-xs font-sans font-normal text-stone-400">
-                ({recipe.ingredients.length})
-              </span>
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-serif font-bold text-xl text-stone-900 dark:text-stone-100 flex items-center gap-2">
+                <span>Ingredients</span>
+                <span className="text-xs font-sans font-normal text-stone-400">
+                  ({recipe.ingredients.length})
+                </span>
+              </h2>
+
+              {checkedIngredients.size > 0 && (
+                <button
+                  onClick={() => setCheckedIngredients(new Set())}
+                  className="flex items-center gap-1 text-xs text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors px-2 py-0.5 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800"
+                  title="Reset checked ingredients"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Reset ({checkedIngredients.size})</span>
+                </button>
+              )}
+            </div>
 
             <button
               onClick={handleAddAllToCart}
@@ -423,12 +445,25 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
         {/* Instructions Column (7 cols) */}
         <section className="lg:col-span-7 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-serif font-bold text-xl text-stone-900 dark:text-stone-100 flex items-center gap-2">
-              <span>Instructions</span>
-              <span className="text-xs font-sans font-normal text-stone-400">
-                ({recipe.instructions.length} steps)
-              </span>
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-serif font-bold text-xl text-stone-900 dark:text-stone-100 flex items-center gap-2">
+                <span>Instructions</span>
+                <span className="text-xs font-sans font-normal text-stone-400">
+                  ({recipe.instructions.length} steps)
+                </span>
+              </h2>
+
+              {checkedSteps.size > 0 && (
+                <button
+                  onClick={() => setCheckedSteps(new Set())}
+                  className="flex items-center gap-1 text-xs text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors px-2 py-0.5 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800"
+                  title="Reset completed steps"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Reset ({checkedSteps.size}/{recipe.instructions.length})</span>
+                </button>
+              )}
+            </div>
 
             <button
               onClick={() => onStartCooking(recipe)}
@@ -440,37 +475,73 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
           </div>
 
           <div className="space-y-4">
-            {recipe.instructions.map((step, idx) => (
-              <div
-                key={step.id}
-                className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 shadow-xs flex items-start gap-4"
-              >
-                <span className="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-bold text-sm flex items-center justify-center shrink-0 border border-brand-200/60 dark:border-brand-800/60">
-                  {idx + 1}
-                </span>
+            {recipe.instructions.map((step, idx) => {
+              const isDone = checkedSteps.has(idx);
 
-                <div className="space-y-3 flex-1">
-                  <p className="text-stone-800 dark:text-stone-200 text-sm sm:text-base leading-relaxed">
-                    {step.text}
-                  </p>
-
-                  {/* Detected Timers in Step */}
-                  {step.timers.length > 0 && (
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      {step.timers.map((timer, tIdx) => (
-                        <div
-                          key={tIdx}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs font-semibold"
-                        >
-                          <TimerIcon className="w-3.5 h-3.5 text-amber-600" />
-                          <span>{timer.label}</span>
-                        </div>
-                      ))}
+              return (
+                <div
+                  key={step.id}
+                  onClick={() => toggleStepCheck(idx)}
+                  className={`border rounded-2xl p-5 shadow-xs flex items-start gap-4 cursor-pointer group transition-all ${
+                    isDone
+                      ? 'bg-stone-50/70 dark:bg-stone-900/40 border-stone-200/60 dark:border-stone-800/60'
+                      : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 hover:border-brand-300 dark:hover:border-brand-700'
+                  }`}
+                >
+                  {/* Step Checkbox & Number Badge */}
+                  <div className="flex items-center gap-2.5 shrink-0 pt-0.5">
+                    <div
+                      className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                        isDone
+                          ? 'bg-emerald-500 border-emerald-500 text-white shadow-xs'
+                          : 'border-stone-300 dark:border-stone-600 bg-stone-50 dark:bg-stone-800 group-hover:border-brand-500 text-transparent'
+                      }`}
+                      title={isDone ? 'Mark step incomplete' : 'Mark step complete'}
+                    >
+                      {isDone && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                     </div>
-                  )}
+
+                    <span
+                      className={`w-7 h-7 rounded-xl font-bold text-xs flex items-center justify-center border transition-colors ${
+                        isDone
+                          ? 'bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-500 border-stone-200 dark:border-stone-700'
+                          : 'bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border-brand-200/60 dark:border-brand-800/60'
+                      }`}
+                    >
+                      {idx + 1}
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 flex-1">
+                    <p
+                      className={`text-sm sm:text-base leading-relaxed transition-all ${
+                        isDone
+                          ? 'text-stone-400 dark:text-stone-500 line-through'
+                          : 'text-stone-800 dark:text-stone-200'
+                      }`}
+                    >
+                      {step.text}
+                    </p>
+
+                    {/* Detected Timers in Step */}
+                    {step.timers.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {step.timers.map((timer, tIdx) => (
+                          <div
+                            key={tIdx}
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs font-semibold"
+                          >
+                            <TimerIcon className="w-3.5 h-3.5 text-amber-600" />
+                            <span>{timer.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       </div>
