@@ -93,6 +93,15 @@ export async function syncWithGitHub(
   const authorName = commitData.commit?.author?.name || 'GitHub User';
   const commitDate = commitData.commit?.author?.date || new Date().toISOString();
 
+  // If GitHub redirected the repository (e.g. carljmosca/recipes -> marked-recipes/recipes),
+  // extract the canonical owner and repo name from the commit url: https://api.github.com/repos/:owner/:repo/commits/:sha
+  if (typeof commitData.url === 'string') {
+    const canonicalMatch = commitData.url.match(/repos\/([^\/]+)\/([^\/]+)\/commits/);
+    if (canonicalMatch) {
+      owner = canonicalMatch[1];
+    }
+  }
+
   onProgress?.(`Found latest commit: ${latestCommitSha.slice(0, 7)} — "${commitMessage}"`, 15);
 
   // 2. Fetch recursive git tree

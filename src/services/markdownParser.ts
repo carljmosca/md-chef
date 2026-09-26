@@ -256,6 +256,11 @@ export function parseRecipeBody(
       continue;
     }
 
+    if (currentMode === 'notes') {
+      notesLines.push(rawLine);
+      continue;
+    }
+
     // Check subsection headers like ### For the Dough, #### Sauce, or **Dough:**
     const subheaderMatch = line.match(/^(?:#{3,6}\s+(.+?)(?:\s+#+)?|\*{2}(.+?)\*{2}:?)$/);
     if (subheaderMatch) {
@@ -305,17 +310,13 @@ export function parseRecipeBody(
           });
         }
       }
-    } else if (currentMode === 'notes') {
-      if (line.length > 0) {
-        notesLines.push(line);
-      }
     }
   }
 
   return {
     ingredients,
     instructions,
-    notes: notesLines.length > 0 ? notesLines.join('\n') : undefined
+    notes: notesLines.join('\n').trim() || undefined
   };
 }
 

@@ -153,3 +153,30 @@ test('Parse diverse subheading variants like #### and bold headers under ingredi
   assert.strictEqual(ingredients[3].section, 'For the Filling');
 });
 
+test('Parse notes section without treating its list as ingredients or instructions', () => {
+  const body = `## Ingredients
+- [ ] 2 oz achiote paste
+
+## Instructions
+- [ ] Mix the marinade.
+
+## Notes
+Save the remaining paste for another use.
+
+Achiote Paste Alternative
+3 tbsp paprika
+1 tbsp white vinegar
+
+Marinate for up to 4 hours.
+`;
+
+  const { ingredients, instructions, notes } = parseRecipeBody(body, 'pollo-asado');
+
+  assert.strictEqual(ingredients.length, 1);
+  assert.strictEqual(instructions.length, 1);
+  assert.strictEqual(
+    notes,
+    'Save the remaining paste for another use.\n\nAchiote Paste Alternative\n3 tbsp paprika\n1 tbsp white vinegar\n\nMarinate for up to 4 hours.'
+  );
+});
+

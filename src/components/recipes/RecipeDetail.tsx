@@ -150,6 +150,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
       }
       text += `${i + 1}. ${step.text}\n`;
     });
+    if (recipe.notes) text += `\n--- NOTES ---\n${recipe.notes}\n`;
 
     navigator.clipboard.writeText(text);
     setCopiedNotice('Full recipe text copied!');
@@ -177,6 +178,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
       }
       body += `${i + 1}. ${step.text}\n`;
     });
+    if (recipe.notes) body += `\nNOTES:\n${recipe.notes}\n`;
     body += `\nShared via MD-Chef Recipe Companion`;
 
     window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
@@ -671,6 +673,15 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
           </div>
         </section>
       </div>
+
+      {recipe.notes && (
+        <section className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 shadow-xs space-y-2">
+          <h2 className="font-serif font-bold text-xl text-stone-900 dark:text-stone-100">Notes</h2>
+          <p className="text-sm leading-relaxed text-stone-700 dark:text-stone-300 whitespace-pre-wrap">
+            {recipe.notes}
+          </p>
+        </section>
+      )}
 
       {/* Recipe Footer: Source Credit */}
       <footer className="pt-6 border-t border-stone-200 dark:border-stone-800 flex flex-wrap items-center justify-between gap-4 text-xs text-stone-500 dark:text-stone-400">
