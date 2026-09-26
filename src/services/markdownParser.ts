@@ -226,36 +226,57 @@ export function parseRecipeBody(
     const rawLine = lines[i];
     const line = rawLine.trim();
 
-    // Check header
-    if (/^##\s+Ingredients/i.test(line)) {
+    // Check primary section headers (## Ingredients, ## Instructions, etc.)
+    const ingHeaderMatch = line.match(/^##\s+Ingredients?(?:\s*[:-]?\s*(.+))?$/i);
+    if (ingHeaderMatch) {
       currentMode = 'ingredients';
-      currentSection = '';
+      currentSection = ingHeaderMatch[1]?.trim() || '';
       continue;
-    } else if (/^##\s+Instructions/i.test(line) || /^##\s+Directions/i.test(line) || /^##\s+Method/i.test(line)) {
+    }
+
+    const instHeaderMatch = line.match(/^##\s+(?:Instructions|Directions|Method|Steps)(?:\s*[:-]?\s*(.+))?$/i);
+    if (instHeaderMatch) {
       currentMode = 'instructions';
+      currentSection = instHeaderMatch[1]?.trim() || '';
+      continue;
+    }
+
+    if (/^##\s+Notes/i.test(line)) {
+      currentMode = 'notes';
       currentSection = '';
       continue;
-    } else if (/^##\s+Notes/i.test(line)) {
-      currentMode = 'notes';
-      continue;
-    } else if (/^##\s+/i.test(line)) {
+    }
+
+    if (/^##\s+/i.test(line)) {
       // Another secondary section
       if (line.toLowerCase().includes('ingredient')) currentMode = 'ingredients';
-      else if (line.toLowerCase().includes('instruction') || line.toLowerCase().includes('step')) currentMode = 'instructions';
+      else if (line.toLowerCase().includes('instruction') || line.toLowerCase().includes('step') || line.toLowerCase().includes('direction') || line.toLowerCase().includes('method')) currentMode = 'instructions';
       else currentMode = 'none';
       currentSection = '';
       continue;
     }
 
-    // Check subsection headers like ### For the Dough
-    if (/^###\s+(.+)$/.test(line)) {
-      currentSection = line.replace(/^###\s+/, '').trim();
-      continue;
+    // Check subsection headers like ### For the Dough, #### Sauce, or **Dough:**
+    const subheaderMatch = line.match(/^(?:#{3,6}\s+(.+?)(?:\s+#+)?|\*{2}(.+?)\*{2}:?)$/);
+    if (subheaderMatch) {
+      const heading = (subheaderMatch[1] || subheaderMatch[2]).replace(/:$/, '').trim();
+      if (heading.length > 0) {
+        if (currentMode === 'none') {
+          currentMode = 'ingredients';
+        }
+        currentSection = heading;
+        continue;
+      }
+    }
+
+    // Default to ingredients if checklist item appears before an explicit header
+    if (currentMode === 'none' && /^[-*]\s+(?:\[[ xX]?\]\s*)?.+$/.test(line)) {
+      currentMode = 'ingredients';
     }
 
     if (currentMode === 'ingredients') {
-      // Look for list items: - [ ] item, - item, * item
-      const itemMatch = line.match(/^[-*]\s*(?:\[[ xX]?\])?\s*(.+)$/);
+      // Look for list items: - [ ] item, - item, * item, 1. item
+      const itemMatch = line.match(/^(?:[-*]\s+|\d+\.\s+)(?:\[[ xX]?\]\s*)?(.+)$/);
       if (itemMatch) {
         const rawItem = itemMatch[1].trim();
         if (rawItem.length > 0) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   X,
   ChevronLeft,
@@ -37,6 +37,21 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
 
   const steps = recipe.instructions;
   const currentStep = steps[currentStepIndex];
+
+  const groupedIngredients = useMemo(() => {
+    const groups: { section?: string; items: typeof recipe.ingredients }[] = [];
+    let currentGroup: { section?: string; items: typeof recipe.ingredients } | null = null;
+
+    for (const ing of recipe.ingredients) {
+      if (!currentGroup || currentGroup.section !== ing.section) {
+        currentGroup = { section: ing.section, items: [ing] };
+        groups.push(currentGroup);
+      } else {
+        currentGroup.items.push(ing);
+      }
+    }
+    return groups;
+  }, [recipe.ingredients]);
 
   // Screen Wake Lock API
   useEffect(() => {
@@ -295,6 +310,11 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
                     <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-brand-500">
                       Step {currentStepIndex + 1} of {steps.length}
                     </span>
+                    {currentStep?.section && (
+                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-brand-500/10 text-brand-400 font-medium border border-brand-500/20">
+                        {currentStep.section}
+                      </span>
+                    )}
                     <span className="text-xs text-stone-500 font-medium">
                       ({completedSteps.size} of {steps.length} completed)
                     </span>
@@ -431,10 +451,21 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-2.5 divide-y divide-stone-800/60">
-              {recipe.ingredients.map((ing) => (
-                <div key={ing.id} className="pt-2 text-sm text-stone-300 leading-snug">
-                  • {ing.raw}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {groupedIngredients.map((group, gIdx) => (
+                <div key={group.section || gIdx} className="space-y-2">
+                  {group.section && (
+                    <div className="text-xs font-bold uppercase tracking-wider text-brand-400 font-sans border-b border-stone-800 pb-1">
+                      {group.section}
+                    </div>
+                  )}
+                  <div className="space-y-2 divide-y divide-stone-800/60">
+                    {group.items.map((ing) => (
+                      <div key={ing.id} className="pt-2 text-sm text-stone-300 leading-snug">
+                        • {ing.raw}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
@@ -504,7 +535,7 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
                               : 'text-stone-400'
                           }`}
                         >
-                          Step {idx + 1} {isCurrent && '• Current'}
+                          Step {idx + 1} {step.section ? `• ${step.section}` : ''} {isCurrent && '• Current'}
                         </span>
                         {isDone && (
                           <span className="text-[10px] text-emerald-400 font-semibold">Done</span>

@@ -54,7 +54,7 @@ export async function syncWithGitHub(
   settings: AppSettings,
   onProgress?: SyncProgressCallback
 ): Promise<{ stats: SyncStats; updatedRecipes: Recipe[] }> {
-  const owner = settings.repoOwner.trim() || 'carljmosca';
+  let owner = settings.repoOwner.trim() || 'carljmosca';
   const repo = settings.repoName.trim() || 'recipes';
   const branch = settings.branch.trim() || 'main';
   const token = settings.githubToken?.trim();
@@ -62,8 +62,18 @@ export async function syncWithGitHub(
   onProgress?.(`Connecting to GitHub: ${owner}/${repo} (${branch})...`, 5);
 
   // 1. Fetch latest commit for branch
-  const commitUrl = `https://api.github.com/repos/${owner}/${repo}/commits/${branch}`;
-  const commitRes = await fetchWithAuth(commitUrl, token);
+  let commitUrl = `https://api.github.com/repos/${owner}/${repo}/commits/${branch}`;
+  let commitRes = await fetchWithAuth(commitUrl, token);
+
+  // If 404 and owner is carljmosca, try fallback to marked-recipes
+  if (!commitRes.ok && commitRes.status === 404 && owner.toLowerCase() === 'carljmosca') {
+    const fallbackOwner = 'marked-recipes';
+    const fallbackRes = await fetchWithAuth(`https://api.github.com/repos/${fallbackOwner}/${repo}/commits/${branch}`, token);
+    if (fallbackRes.ok) {
+      owner = fallbackOwner;
+      commitRes = fallbackRes;
+    }
+  }
 
   if (!commitRes.ok) {
     if (commitRes.status === 403) {

@@ -89,3 +89,67 @@ test('Parse ingredients and instructions from markdown checklists', () => {
   assert.strictEqual(instructions[0].timers[0].totalSeconds, 300);
   assert.strictEqual(instructions[1].timers[0].totalSeconds, 600);
 });
+
+test('Parse Italian pizza recipe with Dough and Toppings subheadings', () => {
+  const pizzaBody = `
+## Ingredients
+### Dough
+- [ ] Ingredients for one pizza: 280 grams / 9.9 oz
+- [ ] 170g (6oz) 'zero zero'/all purpose flour
+- [ ] 100ml/ 3.5 oz water
+- [ ] 1 pinch of fresh yeast - 0.5 grams / 0.018oz
+- [ ] 1 teaspoon of salt - 5 grams / 0.17 oz
+
+### Toppings
+- [ ] 100g of peeled tomatoes (Roma style)
+- [ ] 1 teaspoon of salt
+- [ ] Dry oregano (not fresh)
+- [ ] Fresh basil cut by hand
+- [ ] Extra virgin olive oil
+
+## Instructions Dough
+- [ ] Melt the yeast in half a cup of water
+- [ ] Sift the flour into a bowl.
+`;
+
+  const { ingredients, instructions } = parseRecipeBody(pizzaBody, 'pizza');
+
+  assert.strictEqual(ingredients.length, 10);
+
+  // Dough section items
+  assert.strictEqual(ingredients[0].section, 'Dough');
+  assert.strictEqual(ingredients[0].raw, 'Ingredients for one pizza: 280 grams / 9.9 oz');
+  assert.strictEqual(ingredients[4].section, 'Dough');
+  assert.strictEqual(ingredients[4].raw, '1 teaspoon of salt - 5 grams / 0.17 oz');
+
+  // Toppings section items
+  assert.strictEqual(ingredients[5].section, 'Toppings');
+  assert.strictEqual(ingredients[5].raw, '100g of peeled tomatoes (Roma style)');
+  assert.strictEqual(ingredients[9].section, 'Toppings');
+  assert.strictEqual(ingredients[9].raw, 'Extra virgin olive oil');
+
+  // Instructions section
+  assert.strictEqual(instructions.length, 2);
+  assert.strictEqual(instructions[0].section, 'Dough');
+});
+
+test('Parse diverse subheading variants like #### and bold headers under ingredients', () => {
+  const body = `
+## Ingredients
+#### For the Crust
+- 2 cups flour
+- 1/2 cup butter
+
+**For the Filling:**
+- 3 apples
+- 1/2 cup sugar
+`;
+
+  const { ingredients } = parseRecipeBody(body, 'pie');
+  assert.strictEqual(ingredients.length, 4);
+  assert.strictEqual(ingredients[0].section, 'For the Crust');
+  assert.strictEqual(ingredients[1].section, 'For the Crust');
+  assert.strictEqual(ingredients[2].section, 'For the Filling');
+  assert.strictEqual(ingredients[3].section, 'For the Filling');
+});
+

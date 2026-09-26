@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ArrowLeft,
   Flame,
@@ -99,17 +99,57 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
     setShowShareMenu(false);
   };
 
+  const groupedIngredients = useMemo(() => {
+    const groups: { section?: string; items: typeof recipe.ingredients }[] = [];
+    let currentGroup: { section?: string; items: typeof recipe.ingredients } | null = null;
+
+    for (const ing of recipe.ingredients) {
+      if (!currentGroup || currentGroup.section !== ing.section) {
+        currentGroup = { section: ing.section, items: [ing] };
+        groups.push(currentGroup);
+      } else {
+        currentGroup.items.push(ing);
+      }
+    }
+    return groups;
+  }, [recipe.ingredients]);
+
+  const groupedInstructions = useMemo(() => {
+    const groups: { section?: string; items: { step: typeof recipe.instructions[0]; globalIdx: number }[] }[] = [];
+    let currentGroup: { section?: string; items: { step: typeof recipe.instructions[0]; globalIdx: number }[] } | null = null;
+
+    recipe.instructions.forEach((step, idx) => {
+      if (!currentGroup || currentGroup.section !== step.section) {
+        currentGroup = { section: step.section, items: [{ step, globalIdx: idx }] };
+        groups.push(currentGroup);
+      } else {
+        currentGroup.items.push({ step, globalIdx: idx });
+      }
+    });
+    return groups;
+  }, [recipe.instructions]);
+
   const copyFormattedRecipeText = () => {
     let text = `🍳 ${recipe.frontmatter.title}\n`;
     if (recipe.frontmatter.servings) text += `Servings: ${servings}\n`;
     if (recipe.frontmatter.prep_time) text += `Prep: ${recipe.frontmatter.prep_time} | `;
     if (recipe.frontmatter.cook_time) text += `Cook: ${recipe.frontmatter.cook_time}\n`;
     text += `\n--- INGREDIENTS ---\n`;
+    let lastSection: string | undefined = undefined;
     recipe.ingredients.forEach((ing) => {
+      if (ing.section && ing.section !== lastSection) {
+        text += `\n[${ing.section}]\n`;
+        lastSection = ing.section;
+      }
       text += `• ${scaleIngredientQuantity(ing.raw, scaleFactor)}\n`;
     });
     text += `\n--- INSTRUCTIONS ---\n`;
+    let lastInstSection: string | undefined = undefined;
     recipe.instructions.forEach((step, i) => {
+      if (step.section && step.section !== lastInstSection) {
+        text += `\n[${step.section}]\n`;
+        lastInstSection = step.section;
+      }
       text += `${i + 1}. ${step.text}\n`;
     });
 
@@ -122,11 +162,21 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   const emailRecipe = () => {
     const subject = encodeURIComponent(`Recipe: ${recipe.frontmatter.title}`);
     let body = `Hi!\n\nHere is the recipe for ${recipe.frontmatter.title} (${servings} servings):\n\nINGREDIENTS:\n`;
+    let lastSection: string | undefined = undefined;
     recipe.ingredients.forEach((ing) => {
+      if (ing.section && ing.section !== lastSection) {
+        body += `\n[${ing.section}]\n`;
+        lastSection = ing.section;
+      }
       body += `- ${scaleIngredientQuantity(ing.raw, scaleFactor)}\n`;
     });
     body += `\nINSTRUCTIONS:\n`;
+    let lastInstSection: string | undefined = undefined;
     recipe.instructions.forEach((step, i) => {
+      if (step.section && step.section !== lastInstSection) {
+        body += `\n[${step.section}]\n`;
+        lastInstSection = step.section;
+      }
       body += `${i + 1}. ${step.text}\n`;
     });
     body += `\nShared via MD-Chef Recipe Companion`;
@@ -450,39 +500,56 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
             </button>
           </div>
 
-          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 shadow-xs divide-y divide-stone-100 dark:divide-stone-800/80">
-            {recipe.ingredients.map((ing) => {
-              const isChecked = checkedIngredients.has(ing.id);
-              const scaledText = scaleIngredientQuantity(ing.raw, scaleFactor);
-
-              return (
-                <div
-                  key={ing.id}
-                  onClick={() => toggleIngredientCheck(ing.id)}
-                  className="py-3 flex items-start gap-3 cursor-pointer group hover:bg-stone-50/50 dark:hover:bg-stone-800/30 px-1 rounded-lg transition-colors"
-                >
-                  <div
-                    className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
-                      isChecked
-                        ? 'bg-emerald-500 border-emerald-500 text-white'
-                        : 'border-stone-300 dark:border-stone-600 group-hover:border-stone-400'
-                    }`}
-                  >
-                    {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 shadow-xs space-y-5">
+            {groupedIngredients.map((group, gIdx) => (
+              <div key={group.section || `ing-group-${gIdx}`} className={gIdx > 0 ? 'pt-4 border-t border-stone-100 dark:border-stone-800' : ''}>
+                {group.section && (
+                  <div className="flex items-center gap-2 mb-2 px-1">
+                    <h3 className="font-serif font-bold text-sm tracking-wide text-brand-700 dark:text-brand-400">
+                      {group.section}
+                    </h3>
+                    <span className="text-[11px] font-sans font-medium text-stone-400 dark:text-stone-500">
+                      ({group.items.length})
+                    </span>
                   </div>
+                )}
 
-                  <span
-                    className={`text-sm leading-snug transition-all ${
-                      isChecked
-                        ? 'text-stone-400 dark:text-stone-500 line-through'
-                        : 'text-stone-800 dark:text-stone-200'
-                    }`}
-                  >
-                    {scaledText}
-                  </span>
+                <div className="divide-y divide-stone-100 dark:divide-stone-800/80">
+                  {group.items.map((ing) => {
+                    const isChecked = checkedIngredients.has(ing.id);
+                    const scaledText = scaleIngredientQuantity(ing.raw, scaleFactor);
+
+                    return (
+                      <div
+                        key={ing.id}
+                        onClick={() => toggleIngredientCheck(ing.id)}
+                        className="py-3 flex items-start gap-3 cursor-pointer group hover:bg-stone-50/50 dark:hover:bg-stone-800/30 px-1 rounded-lg transition-colors"
+                      >
+                        <div
+                          className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
+                            isChecked
+                              ? 'bg-emerald-500 border-emerald-500 text-white'
+                              : 'border-stone-300 dark:border-stone-600 group-hover:border-stone-400'
+                          }`}
+                        >
+                          {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                        </div>
+
+                        <span
+                          className={`text-sm leading-snug transition-all ${
+                            isChecked
+                              ? 'text-stone-400 dark:text-stone-500 line-through'
+                              : 'text-stone-800 dark:text-stone-200'
+                          }`}
+                        >
+                          {scaledText}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </section>
 
@@ -518,74 +585,91 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
             </button>
           </div>
 
-          <div className="space-y-4">
-            {recipe.instructions.map((step, idx) => {
-              const isDone = checkedSteps.has(idx);
-
-              return (
-                <div
-                  key={step.id}
-                  onClick={() => toggleStepCheck(idx)}
-                  className={`border rounded-2xl p-5 shadow-xs flex items-start gap-4 cursor-pointer group transition-all ${
-                    isDone
-                      ? 'bg-stone-50/70 dark:bg-stone-900/40 border-stone-200/60 dark:border-stone-800/60'
-                      : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 hover:border-brand-300 dark:hover:border-brand-700'
-                  }`}
-                >
-                  {/* Step Checkbox & Number Badge */}
-                  <div className="flex items-center gap-2.5 shrink-0 pt-0.5">
-                    <div
-                      className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-                        isDone
-                          ? 'bg-emerald-500 border-emerald-500 text-white shadow-xs'
-                          : 'border-stone-300 dark:border-stone-600 bg-stone-50 dark:bg-stone-800 group-hover:border-brand-500 text-transparent'
-                      }`}
-                      title={isDone ? 'Mark step incomplete' : 'Mark step complete'}
-                    >
-                      {isDone && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                    </div>
-
-                    <span
-                      className={`w-7 h-7 rounded-xl font-bold text-xs flex items-center justify-center border transition-colors ${
-                        isDone
-                          ? 'bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-500 border-stone-200 dark:border-stone-700'
-                          : 'bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border-brand-200/60 dark:border-brand-800/60'
-                      }`}
-                    >
-                      {idx + 1}
+          <div className="space-y-6">
+            {groupedInstructions.map((group, gIdx) => (
+              <div key={group.section || `inst-group-${gIdx}`} className="space-y-3">
+                {group.section && (
+                  <div className="flex items-center gap-2 pt-1 px-1">
+                    <h3 className="font-serif font-bold text-base text-stone-800 dark:text-stone-200">
+                      {group.section}
+                    </h3>
+                    <span className="text-xs font-sans font-medium text-stone-400 dark:text-stone-500">
+                      ({group.items.length} {group.items.length === 1 ? 'step' : 'steps'})
                     </span>
                   </div>
+                )}
 
-                  <div className="space-y-3 flex-1">
-                    <p
-                      className={`text-sm sm:text-base leading-relaxed transition-all ${
-                        isDone
-                          ? 'text-stone-400 dark:text-stone-500 line-through'
-                          : 'text-stone-800 dark:text-stone-200'
-                      }`}
-                    >
-                      {step.text}
-                    </p>
+                <div className="space-y-4">
+                  {group.items.map(({ step, globalIdx }) => {
+                    const isDone = checkedSteps.has(globalIdx);
 
-                    {/* Detected Timers in Step */}
-                    {step.timers.length > 0 && (
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {step.timers.map((timer, tIdx) => (
+                    return (
+                      <div
+                        key={step.id}
+                        onClick={() => toggleStepCheck(globalIdx)}
+                        className={`border rounded-2xl p-5 shadow-xs flex items-start gap-4 cursor-pointer group transition-all ${
+                          isDone
+                            ? 'bg-stone-50/70 dark:bg-stone-900/40 border-stone-200/60 dark:border-stone-800/60'
+                            : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 hover:border-brand-300 dark:hover:border-brand-700'
+                        }`}
+                      >
+                        {/* Step Checkbox & Number Badge */}
+                        <div className="flex items-center gap-2.5 shrink-0 pt-0.5">
                           <div
-                            key={tIdx}
-                            onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs font-semibold"
+                            className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                              isDone
+                                ? 'bg-emerald-500 border-emerald-500 text-white shadow-xs'
+                                : 'border-stone-300 dark:border-stone-600 bg-stone-50 dark:bg-stone-800 group-hover:border-brand-500 text-transparent'
+                            }`}
+                            title={isDone ? 'Mark step incomplete' : 'Mark step complete'}
                           >
-                            <TimerIcon className="w-3.5 h-3.5 text-amber-600" />
-                            <span>{timer.label}</span>
+                            {isDone && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                           </div>
-                        ))}
+
+                          <span
+                            className={`w-7 h-7 rounded-xl font-bold text-xs flex items-center justify-center border transition-colors ${
+                              isDone
+                                ? 'bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-500 border-stone-200 dark:border-stone-700'
+                                : 'bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border-brand-200/60 dark:border-brand-800/60'
+                            }`}
+                          >
+                            {globalIdx + 1}
+                          </span>
+                        </div>
+
+                        <div className="space-y-3 flex-1">
+                          <p
+                            className={`text-sm sm:text-base leading-relaxed transition-all ${
+                              isDone
+                                ? 'text-stone-400 dark:text-stone-500 line-through'
+                                : 'text-stone-800 dark:text-stone-200'
+                            }`}
+                          >
+                            {step.text}
+                          </p>
+
+                          {/* Detected Timers in Step */}
+                          {step.timers.length > 0 && (
+                            <div className="flex flex-wrap gap-2 pt-1">
+                              {step.timers.map((timer, tIdx) => (
+                                <div
+                                  key={tIdx}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs font-semibold"
+                                >
+                                  <TimerIcon className="w-3.5 h-3.5 text-amber-600" />
+                                  <span>{timer.label}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </section>
       </div>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Recipe, SyncStats } from '../types/recipe';
 import {
   getAllRecipesFromDB,
@@ -49,6 +49,8 @@ const RecipeContext = createContext<RecipeContextValue | undefined>(undefined);
 export const RecipeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { settings } = useSettings();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [isInitialLoaded, setIsInitialLoaded] = useState(false);
+  const hasSyncedOnLaunchRef = useRef(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
@@ -92,6 +94,8 @@ export const RecipeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     } catch (err) {
       console.error('Failed to load recipes', err);
+    } finally {
+      setIsInitialLoaded(true);
     }
   }, []);
 
@@ -175,16 +179,22 @@ export const RecipeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [settings, syncState.stats, activeRecipe]);
 
-  // Auto-sync on launch if enabled
+  // Check git repository for updates when the app opens
   useEffect(() => {
-    if (settings.autoSyncOnLaunch && recipes.length > 0 && !syncState.isSyncing) {
-      // Small timeout to let UI mount smoothly
-      const timer = setTimeout(() => {
-        triggerSync().catch(() => {});
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [settings.autoSyncOnLaunch]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!isInitialLoaded || hasSyncedOnLaunchRef.current) return;
+    if (!settings.autoSyncOnLaunch) return;
+
+    hasSyncedOnLaunchRef.current = true;
+
+    // Small delay to allow the app UI to smoothly mount and display cached recipes first
+    const timer = setTimeout(() => {
+      triggerSync().catch((err) => {
+        console.warn('Initial git sync on app launch encountered an issue:', err);
+      });
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [isInitialLoaded, settings.autoSyncOnLaunch, triggerSync]);
 
   // Toggle favorite
   const toggleFavorite = async (recipeId: string) => {
