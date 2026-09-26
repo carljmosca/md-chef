@@ -10,6 +10,7 @@ import {
 } from '../services/storage';
 import { getSeedRecipes } from '../data/defaultRecipes';
 import { syncWithGitHub } from '../services/githubSync';
+import { extractFrontmatter, parseRecipeBody } from '../services/markdownParser';
 import { useSettings } from './SettingsContext';
 
 interface SyncState {
@@ -78,6 +79,19 @@ export const RecipeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       if (stored.length > 0) {
+        // Re-parse any cached recipes missing notes (migration for older cached data)
+        const needsReparse = stored.filter((r) => r.rawContent && r.notes === undefined);
+        if (needsReparse.length > 0) {
+          for (const r of needsReparse) {
+            const { body } = extractFrontmatter(r.rawContent);
+            const { notes } = parseRecipeBody(body, r.path);
+            if (notes) {
+              r.notes = notes;
+            }
+          }
+          await saveRecipesToDB(needsReparse);
+        }
+
         const enriched = stored.map((r) => ({
           ...r,
           isFavorite: favSet.has(r.id)

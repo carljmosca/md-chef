@@ -674,14 +674,58 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
         </section>
       </div>
 
-      {recipe.notes && (
-        <section className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 shadow-xs space-y-2">
-          <h2 className="font-serif font-bold text-xl text-stone-900 dark:text-stone-100">Notes</h2>
-          <p className="text-sm leading-relaxed text-stone-700 dark:text-stone-300 whitespace-pre-wrap">
-            {recipe.notes}
-          </p>
-        </section>
-      )}
+      {recipe.notes && (() => {
+        // Split notes into list items and paragraph blocks
+        const lines = recipe.notes.split('\n');
+        const elements: React.ReactNode[] = [];
+        let currentList: string[] = [];
+        let paraLines: string[] = [];
+
+        const flushList = () => {
+          if (currentList.length > 0) {
+            elements.push(
+              <ul key={`notes-ul-${elements.length}`} className="list-disc list-inside space-y-1.5 text-sm leading-relaxed text-stone-700 dark:text-stone-300">
+                {currentList.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
+            );
+            currentList = [];
+          }
+        };
+
+        const flushPara = () => {
+          const text = paraLines.join('\n').trim();
+          if (text) {
+            elements.push(
+              <p key={`notes-p-${elements.length}`} className="text-sm leading-relaxed text-stone-700 dark:text-stone-300">
+                {text}
+              </p>
+            );
+          }
+          paraLines = [];
+        };
+
+        for (const line of lines) {
+          const listMatch = line.match(/^\s*[-*]\s+(.+)$/);
+          if (listMatch) {
+            flushPara();
+            currentList.push(listMatch[1]);
+          } else {
+            flushList();
+            paraLines.push(line);
+          }
+        }
+        flushList();
+        flushPara();
+
+        return (
+          <section className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 shadow-xs space-y-3">
+            <h2 className="font-serif font-bold text-xl text-stone-900 dark:text-stone-100">Notes</h2>
+            {elements}
+          </section>
+        );
+      })()}
 
       {/* Recipe Footer: Source Credit */}
       <footer className="pt-6 border-t border-stone-200 dark:border-stone-800 flex flex-wrap items-center justify-between gap-4 text-xs text-stone-500 dark:text-stone-400">
