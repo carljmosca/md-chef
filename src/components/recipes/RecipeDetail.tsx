@@ -699,12 +699,6 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
 
       </footer>
 
-      {/* Raw Markdown Source Viewer */}
-      {showRawMarkdown && (
-        <pre className="p-4 bg-stone-900 text-stone-200 rounded-2xl overflow-x-auto text-xs font-mono border border-stone-800">
-          <code>{recipe.rawContent}</code>
-        </pre>
-      )}
     </article>
   );
 };
