@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ShoppingBag,
   Plus,
@@ -6,10 +6,14 @@ import {
   Check,
   Copy,
   Share2,
-  CheckCheck
+  CheckCheck,
+  Lightbulb,
+  ExternalLink,
+  X
 } from 'lucide-react';
 import { useShopping } from '../../context/ShoppingContext';
 import { ShoppingItem } from '../../types/recipe';
+import { formatForGoogleKeep, openGoogleKeep } from '../../services/shoppingFormat';
 
 const AISLES: ShoppingItem['category'][] = [
   'Produce',
@@ -48,6 +52,17 @@ export const ShoppingListView: React.FC = () => {
   const [selectedAisle, setSelectedAisle] = useState<ShoppingItem['category']>('Produce');
   const [copiedNotice, setCopiedNotice] = useState<string | null>(null);
 
+  const [isKeepModalOpen, setIsKeepModalOpen] = useState(false);
+  const [keepUncheckedOnly, setKeepUncheckedOnly] = useState(true);
+  const [keepIncludeCategories, setKeepIncludeCategories] = useState(false);
+
+  const keepPreviewText = useMemo(() => {
+    return formatForGoogleKeep(items, {
+      uncheckedOnly: keepUncheckedOnly,
+      includeCategories: keepIncludeCategories
+    });
+  }, [items, keepUncheckedOnly, keepIncludeCategories]);
+
   const handleAddNewItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newItemName.trim()) return;
@@ -78,6 +93,37 @@ export const ShoppingListView: React.FC = () => {
     handleCopyText();
   };
 
+  const handleCopyAndOpenKeep = () => {
+    if (!keepPreviewText) return;
+    navigator.clipboard.writeText(keepPreviewText);
+    setCopiedNotice('✓ Checklist copied! Opening Google Keep...');
+    setTimeout(() => setCopiedNotice(null), 3000);
+    openGoogleKeep();
+  };
+
+  const handleCopyKeepText = () => {
+    if (!keepPreviewText) return;
+    navigator.clipboard.writeText(keepPreviewText);
+    setCopiedNotice('✓ Google Keep checklist copied to clipboard!');
+    setTimeout(() => setCopiedNotice(null), 2500);
+  };
+
+  const handleShareToKeep = async () => {
+    if (!keepPreviewText) return;
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Grocery List',
+          text: keepPreviewText
+        });
+        return;
+      } catch {
+        // Fallback
+      }
+    }
+    handleCopyAndOpenKeep();
+  };
+
   // Group items by aisle
   const groupedItems = AISLES.map((aisle) => ({
     aisle,
@@ -102,6 +148,15 @@ export const ShoppingListView: React.FC = () => {
 
         {totalCount > 0 && (
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsKeepModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-xs font-semibold shadow-xs transition-colors"
+              title="Add or copy to Google Keep"
+            >
+              <Lightbulb className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span>Google Keep</span>
+            </button>
+
             <button
               onClick={handleShare}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-200 hover:bg-stone-50 text-xs font-semibold shadow-xs transition-colors"
@@ -264,6 +319,157 @@ export const ShoppingListView: React.FC = () => {
             Open any recipe or your weekly meal plan and click "Add to List" to automatically collect
             scaled ingredients organized by aisle!
           </p>
+        </div>
+      )}
+
+      {/* Google Keep Modal */}
+      {isKeepModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 border-b border-stone-100 dark:border-stone-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <Lightbulb className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-serif font-bold text-lg text-stone-900 dark:text-stone-100">
+                    Export to Google Keep
+                  </h3>
+                  <p className="text-xs text-stone-500 dark:text-stone-400">
+                    Copy and paste as an interactive checklist note
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsKeepModalOpen(false)}
+                className="p-1.5 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Explanation & Workflow */}
+            <div className="text-xs text-stone-600 dark:text-stone-300 leading-relaxed bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 rounded-2xl p-3.5 space-y-1.5">
+              <div className="font-semibold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                <span>💡 Quick 2-Step Workflow:</span>
+              </div>
+              <ol className="list-decimal list-inside space-y-1 text-stone-600 dark:text-stone-300">
+                <li>Click <strong>"Copy & Open Google Keep"</strong> below.</li>
+                <li>In Google Keep, click the <strong>New list (checkbox symbol)</strong>, then paste (<kbd className="px-1 py-0.5 rounded bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[10px] font-mono">Cmd+V</kbd> / <kbd className="px-1 py-0.5 rounded bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[10px] font-mono">Ctrl+V</kbd>). Each line turns into an interactive checkable item!</li>
+              </ol>
+            </div>
+
+            {/* Formatting Options */}
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-stone-700 dark:text-stone-300 block mb-1.5">
+                  Items to Include
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setKeepUncheckedOnly(true)}
+                    className={`py-2 px-3 text-xs font-medium rounded-xl border transition-all ${
+                      keepUncheckedOnly
+                        ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-950/40 dark:border-brand-700 dark:text-brand-300 font-semibold'
+                        : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400'
+                    }`}
+                  >
+                    Unchecked Only ({totalCount - checkedCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setKeepUncheckedOnly(false)}
+                    className={`py-2 px-3 text-xs font-medium rounded-xl border transition-all ${
+                      !keepUncheckedOnly
+                        ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-950/40 dark:border-brand-700 dark:text-brand-300 font-semibold'
+                        : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400'
+                    }`}
+                  >
+                    All Items ({totalCount})
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-stone-700 dark:text-stone-300 block mb-1.5">
+                  Format Style
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setKeepIncludeCategories(false)}
+                    className={`py-2 px-3 text-xs font-medium rounded-xl border transition-all ${
+                      !keepIncludeCategories
+                        ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-950/40 dark:border-brand-700 dark:text-brand-300 font-semibold'
+                        : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400'
+                    }`}
+                  >
+                    Checklist lines (Recommended)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setKeepIncludeCategories(true)}
+                    className={`py-2 px-3 text-xs font-medium rounded-xl border transition-all ${
+                      keepIncludeCategories
+                        ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-950/40 dark:border-brand-700 dark:text-brand-300 font-semibold'
+                        : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400'
+                    }`}
+                  >
+                    Grouped by Aisle
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Text Preview Box */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs text-stone-500 dark:text-stone-400">
+                <span className="font-semibold">Text Preview:</span>
+                <button
+                  type="button"
+                  onClick={handleCopyKeepText}
+                  className="hover:text-brand-600 dark:hover:text-brand-400 inline-flex items-center gap-1 font-medium"
+                >
+                  <Copy className="w-3 h-3" />
+                  <span>Copy text</span>
+                </button>
+              </div>
+              <pre className="p-3 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl text-xs font-mono text-stone-700 dark:text-stone-300 max-h-36 overflow-y-auto whitespace-pre-wrap">
+                {keepPreviewText || '(No items match criteria)'}
+              </pre>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={handleCopyAndOpenKeep}
+                disabled={!keepPreviewText}
+                className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-stone-950 text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Lightbulb className="w-4 h-4 fill-stone-950" />
+                <span>Copy & Open Google Keep</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </button>
+
+              {typeof navigator !== 'undefined' && !!navigator.share && (
+                <button
+                  type="button"
+                  onClick={handleShareToKeep}
+                  disabled={!keepPreviewText}
+                  className="w-full sm:w-auto py-2.5 px-3.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  title="Share directly via mobile share sheet"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>Share</span>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
