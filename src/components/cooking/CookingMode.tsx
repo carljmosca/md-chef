@@ -33,6 +33,7 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
   const [showStepsDrawer, setShowStepsDrawer] = useState(false);
   const [isWakeLockActive, setIsWakeLockActive] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [showSpeechTip, setShowSpeechTip] = useState(false);
   const [isFinishedCooking, setIsFinishedCooking] = useState(false);
 
   const steps = recipe.instructions;
@@ -102,12 +103,16 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
     if (isSpeaking) {
       stopSpeaking();
       setIsSpeaking(false);
+      setShowSpeechTip(false);
     } else if (currentStep) {
       setIsSpeaking(true);
+      setShowSpeechTip(true);
       speakText(
         `Step ${currentStepIndex + 1}. ${currentStep.text}`,
         settings.speechVoiceRate || 1.0,
-        () => setIsSpeaking(false)
+        () => {
+          setIsSpeaking(false);
+        }
       );
     }
   };
@@ -261,6 +266,25 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
           style={{ width: `${progressPercent}%` }}
         />
       </div>
+
+      {/* TTS Volume / Silent Mode Tip Banner */}
+      {showSpeechTip && (
+        <div className="bg-amber-950/80 border-b border-amber-800/80 px-4 py-2 flex items-center justify-between text-xs text-amber-200 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-2 max-w-2xl">
+            <Volume2 className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>
+              <strong>Tip:</strong> If you do not hear speech on mobile, make sure your phone&apos;s physical <strong>Silent switch</strong> is OFF and media volume is turned up.
+            </span>
+          </div>
+          <button
+            onClick={() => setShowSpeechTip(false)}
+            className="p-1 hover:text-white rounded-md text-amber-300 ml-2"
+            title="Dismiss"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Main Cooking Canvas */}
       <div className="flex-1 flex overflow-hidden relative">
