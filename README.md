@@ -7,10 +7,16 @@ A sleek, responsive Progressive Web App (PWA) built with **React**, **TypeScript
 ## ✨ Features
 
 ### 🔄 Git-Commit Aware Differential Sync
+- **Automatic Startup Check**: Seamlessly checks the configured Git repository for remote updates whenever the app opens, keeping your cookbook up to date.
 - **Commit & Tree SHA Inspection**: Queries GitHub's Git Tree and Commits APIs to compare local IndexedDB recipe blob SHAs with the remote tree.
 - **Minimal Bandwidth**: Unchanged recipes (where Git blob SHA matches) are skipped with zero re-downloading. Only modified or newly added recipes are fetched.
 - **Repository Flexibility**: Supports custom GitHub owner, repo name, branch, and subdirectories in Settings.
 - **Instant Offline Ready**: Pre-seeded with snapshot recipes so the app works immediately on first launch even with zero internet connection.
+
+### 📖 Rich Recipe Parsing & Organization
+- **Structured Subheadings**: Full support for ingredient and instruction subsections (e.g. `### Sauce`, `### Dough`, `### Toppings`).
+- **Interactive Checklists**: Mark off ingredients and instructions with persistent progress tracking and one-tap reset.
+- **Accurate Yield Scaler**: Real-time ingredient scaling (0.5x, 1x, 2x, 3x) that handles fractions, mixed numbers, and unit conversions.
 
 ### 🔪 Immersive Kitchen Cooking Mode
 - **Hands-Free Kitchen View**: High-contrast, large-font layout designed to be read easily from across a counter.
@@ -33,10 +39,11 @@ A sleek, responsive Progressive Web App (PWA) built with **React**, **TypeScript
 - Plan dinners and lunches for Monday through Sunday.
 - **1-Click Grocery Generation**: Click **"Add Week to Shopping List"** to instantly scale and import all ingredients needed for your entire week!
 
-### 🛒 Categorized Shopping List
+### 🛒 Categorized Shopping List & Google Keep Integration
 - Automatically classifies ingredients into grocery store aisles: **Produce**, **Meat & Seafood**, **Dairy & Refrigerated**, **Pantry & Dry Goods**, **Spices & Seasonings**, **Bakery**, and **Other**.
 - Real-time servings scaler (0.5x, 1x, 2x, 3x) scales quantities accurately (e.g., `3 1/2 cups` becomes `7 cups`).
-- Add custom items, check off items in-store, and share via SMS/WhatsApp or formatted clipboard copy.
+- **Google Keep Export & Launch**: 1-click **"Copy & Open Keep"** formats the grocery checklist grouped cleanly by aisle category, copies it to the clipboard, and launches [Google Keep](https://keep.google.com) ready to paste into a new note.
+- **Flexible Sharing**: Add custom items, check off items in-store, and share via SMS, WhatsApp, or standard clipboard copy.
 
 ### 📤 Recipe Sharing
 - Native mobile share sheet via the **Web Share API**.
