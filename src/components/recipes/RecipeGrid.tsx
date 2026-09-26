@@ -66,42 +66,48 @@ export const RecipeGrid: React.FC<RecipeGridProps> = ({ onSelectRecipe, onCookRe
           )}
         </div>
 
-        {/* Category Filter Pills (Scrollable horizontally) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 no-scrollbar scroll-smooth">
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-              selectedCategory === null
-                ? 'bg-brand-600 text-white shadow-xs'
-                : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700'
-            }`}
-          >
-            All Cuisines ({recipes.length})
-          </button>
-
-          {categories.map((cat) => {
-            const count = recipes.filter((r) => r.category.toLowerCase() === cat.toLowerCase()).length;
-            const isSelected = selectedCategory?.toLowerCase() === cat.toLowerCase();
-
-            return (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(isSelected ? null : cat)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                  isSelected
-                    ? 'bg-brand-600 text-white shadow-xs'
-                    : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700'
+        {/* Filter Controls Row: Category Dropdown, Difficulty, Favorites toggle, Sort */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Category Dropdown Selector */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-stone-500 dark:text-stone-400 font-medium">Cuisine:</span>
+              <select
+                value={selectedCategory || ''}
+                onChange={(e) => setSelectedCategory(e.target.value || null)}
+                className={`px-3 py-1.5 rounded-lg border text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors ${
+                  selectedCategory
+                    ? 'border-brand-500 bg-brand-50/70 text-brand-900 dark:bg-brand-950/40 dark:border-brand-600 dark:text-brand-200 font-semibold'
+                    : 'border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800/80 text-stone-700 dark:text-stone-300'
                 }`}
               >
-                {cat} <span className="opacity-70 text-[10px]">({count})</span>
-              </button>
-            );
-          })}
-        </div>
+                <option value="">All Cuisines ({recipes.length})</option>
+                {categories.map((cat) => {
+                  const count = recipes.filter((r) => r.category.toLowerCase() === cat.toLowerCase()).length;
+                  return (
+                    <option key={cat} value={cat}>
+                      {cat} ({count})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
 
-        {/* Second Filter Row: Favorites toggle, Difficulty, Sort */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-stone-100 dark:border-stone-800 text-xs">
-          <div className="flex items-center gap-2">
+            {/* Difficulty Filter */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-stone-500 dark:text-stone-400 font-medium">Difficulty:</span>
+              <select
+                value={selectedDifficulty || ''}
+                onChange={(e) => setSelectedDifficulty(e.target.value || null)}
+                className="px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800/80 text-stone-700 dark:text-stone-300 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500"
+              >
+                <option value="">All</option>
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
+              </select>
+            </div>
+
             {/* Favorites Toggle */}
             <button
               onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
@@ -112,20 +118,8 @@ export const RecipeGrid: React.FC<RecipeGridProps> = ({ onSelectRecipe, onCookRe
               }`}
             >
               <Heart className={`w-3.5 h-3.5 ${showFavoritesOnly ? 'fill-rose-500 text-rose-500' : ''}`} />
-              <span>Favorites Only</span>
+              <span>Favorites</span>
             </button>
-
-            {/* Difficulty Filter */}
-            <select
-              value={selectedDifficulty || ''}
-              onChange={(e) => setSelectedDifficulty(e.target.value || null)}
-              className="px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800/80 text-stone-700 dark:text-stone-300 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500"
-            >
-              <option value="">All Difficulties</option>
-              <option value="Easy">Easy</option>
-              <option value="Medium">Medium</option>
-              <option value="Hard">Hard</option>
-            </select>
           </div>
 
           {/* Sort By Dropdown */}
@@ -135,7 +129,7 @@ export const RecipeGrid: React.FC<RecipeGridProps> = ({ onSelectRecipe, onCookRe
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-2 py-1 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800/80 text-stone-700 dark:text-stone-300 text-xs font-medium focus:outline-none"
+              className="px-2 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800/80 text-stone-700 dark:text-stone-300 text-xs font-medium focus:outline-none"
             >
               <option value="title">Title (A-Z)</option>
               <option value="category">Category</option>
@@ -143,6 +137,77 @@ export const RecipeGrid: React.FC<RecipeGridProps> = ({ onSelectRecipe, onCookRe
             </select>
           </div>
         </div>
+
+        {/* Active Filter Chips (if any filter is selected) */}
+        {(selectedCategory || selectedDifficulty || showFavoritesOnly || searchQuery) && (
+          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-stone-100 dark:border-stone-800 text-xs">
+            <span className="text-[11px] text-stone-400 dark:text-stone-500 font-medium">Active filters:</span>
+
+            {selectedCategory && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-100 dark:bg-brand-950/60 text-brand-800 dark:text-brand-300 font-medium">
+                <span>Cuisine: {selectedCategory}</span>
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className="hover:text-brand-900 dark:hover:text-brand-100 p-0.5 rounded-full"
+                  title="Remove category filter"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedDifficulty && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-medium">
+                <span>Difficulty: {selectedDifficulty}</span>
+                <button
+                  onClick={() => setSelectedDifficulty(null)}
+                  className="hover:text-stone-900 dark:hover:text-stone-100 p-0.5 rounded-full"
+                  title="Remove difficulty filter"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {showFavoritesOnly && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 font-medium">
+                <span>Favorites Only</span>
+                <button
+                  onClick={() => setShowFavoritesOnly(false)}
+                  className="hover:text-rose-900 dark:hover:text-rose-100 p-0.5 rounded-full"
+                  title="Remove favorites filter"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {searchQuery && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-medium">
+                <span>Search: &ldquo;{searchQuery}&rdquo;</span>
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="hover:text-stone-900 dark:hover:text-stone-100 p-0.5 rounded-full"
+                  title="Clear search"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            <button
+              onClick={() => {
+                setSelectedCategory(null);
+                setSelectedDifficulty(null);
+                setShowFavoritesOnly(false);
+                setSearchQuery('');
+              }}
+              className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 ml-1 text-[11px] underline"
+            >
+              Reset all
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Results Header / Active Filters Status */}
