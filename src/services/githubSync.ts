@@ -248,6 +248,24 @@ export async function syncWithGitHub(
     }
   }
 
+  // Re-parse any cached recipe that might be missing parsed fields (e.g. notes)
+  // added by a newer parser version. This handles unchanged files that were
+  // cached before the notes feature existed.
+  const recipesToUpdate: Recipe[] = [];
+  for (const [, recipe] of localMap) {
+    if (recipe.rawContent && recipe.notes === undefined) {
+      const { body } = extractFrontmatter(recipe.rawContent);
+      const { notes } = parseRecipeBody(body, recipe.path);
+      if (notes) {
+        recipe.notes = notes;
+        recipesToUpdate.push(recipe);
+      }
+    }
+  }
+  if (recipesToUpdate.length > 0) {
+    await saveRecipesToDB(recipesToUpdate);
+  }
+
   const finalRecipes = Array.from(localMap.values());
 
   const addedCount = toFetch.filter((f) => !localMap.has(f.path) || !localRecipes.some((lr) => lr.path === f.path)).length;
