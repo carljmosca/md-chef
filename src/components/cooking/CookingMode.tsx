@@ -10,7 +10,8 @@ import {
   Eye,
   ListFilter,
   RotateCcw,
-  Trophy
+  Trophy,
+  FileText
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Recipe, DetectedTimer } from '../../types/recipe';
@@ -31,6 +32,7 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
   const [activeTimers, setActiveTimers] = useState<DetectedTimer[]>([]);
   const [showIngredientsDrawer, setShowIngredientsDrawer] = useState(false);
   const [showStepsDrawer, setShowStepsDrawer] = useState(false);
+  const [showNotesDrawer, setShowNotesDrawer] = useState(false);
   const [isWakeLockActive, setIsWakeLockActive] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showSpeechTip, setShowSpeechTip] = useState(false);
@@ -212,6 +214,7 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
             onClick={() => {
               setShowStepsDrawer(!showStepsDrawer);
               setShowIngredientsDrawer(false);
+              setShowNotesDrawer(false);
             }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
               showStepsDrawer
@@ -231,6 +234,7 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
             onClick={() => {
               setShowIngredientsDrawer(!showIngredientsDrawer);
               setShowStepsDrawer(false);
+              setShowNotesDrawer(false);
             }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
               showIngredientsDrawer
@@ -241,6 +245,26 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
             <ListFilter className="w-4 h-4" />
             <span className="hidden sm:inline">Ingredients</span>
           </button>
+
+          {/* Recipe Notes Toggle */}
+          {recipe.notes && (
+            <button
+              onClick={() => {
+                setShowNotesDrawer(!showNotesDrawer);
+                setShowIngredientsDrawer(false);
+                setShowStepsDrawer(false);
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
+                showNotesDrawer
+                  ? 'bg-brand-600 border-brand-500 text-white'
+                  : 'bg-stone-800 border-stone-700 text-stone-300 hover:bg-stone-700'
+              }`}
+              title="View recipe notes"
+            >
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Notes</span>
+            </button>
+          )}
 
           {/* Text-To-Speech Read Step */}
           {isSpeechSupported() && (
@@ -576,6 +600,72 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
                   </div>
                 );
               })}
+            </div>
+          </aside>
+        )}
+
+        {/* Slide-out Notes Drawer */}
+        {showNotesDrawer && recipe.notes && (
+          <aside className="w-80 sm:w-96 bg-stone-900 border-l border-stone-800 flex flex-col h-full shadow-2xl z-20 animate-in slide-in-from-right duration-200">
+            <div className="p-4 border-b border-stone-800 flex items-center justify-between">
+              <h3 className="font-serif font-bold text-base text-white">Recipe Notes</h3>
+              <button
+                onClick={() => setShowNotesDrawer(false)}
+                className="p-1 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 space-y-3">
+              {(() => {
+                const lines = recipe.notes.split('\n');
+                const elements: React.ReactNode[] = [];
+                let currentList: string[] = [];
+                let paraLines: string[] = [];
+
+                const flushList = () => {
+                  if (currentList.length > 0) {
+                    elements.push(
+                      <ul key={`cooking-notes-ul-${elements.length}`} className="list-disc list-inside space-y-1.5 text-sm leading-relaxed text-stone-300">
+                        {currentList.map((item, i) => (
+                          <li key={i}>{item}</li>
+                        ))}
+                      </ul>
+                    );
+                    currentList = [];
+                  }
+                };
+
+                const flushPara = () => {
+                  const text = paraLines.join('\n').trim();
+                  if (text) {
+                    elements.push(
+                      <p key={`cooking-notes-p-${elements.length}`} className="text-sm leading-relaxed text-stone-300">
+                        {text}
+                      </p>
+                    );
+                  }
+                  paraLines = [];
+                };
+
+                for (const line of lines) {
+                  const listMatch = line.match(/^\s*(?:[-*]|\d+\.)\s+(?:\[[ xX]?\]\s*)?(.+)$/);
+                  if (listMatch) {
+                    flushPara();
+                    currentList.push(listMatch[1]);
+                  } else if (line.trim() === '') {
+                    flushList();
+                    flushPara();
+                  } else {
+                    flushList();
+                    paraLines.push(line);
+                  }
+                }
+                flushList();
+                flushPara();
+                return elements;
+              })()}
             </div>
           </aside>
         )}

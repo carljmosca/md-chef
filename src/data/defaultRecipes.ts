@@ -333,41 +333,51 @@ tags:
     path: "Deserrts/chocolate-chip-cookies.md",
     sha: "386813cb93cb48a20d4977726a080f32b973e57d",
     content: `---
-title: Chewy Brown Butter Chocolate Chip Cookies
-prep_time: 20 mins
-cook_time: 12 mins
-servings: 18
+title: Classic Chocolate Chip Cookies
+prep_time: 30
+servings: 24
 difficulty: Easy
 tags:
   - dessert
-  - baking
   - cookies
+  - chocolate
+  - baking
+source: https://example.com/chocolate-chip-cookies
+credit: Grandma's Recipe Collection
 ---
 
 ## Ingredients
 
-- [ ] 1 cup (2 sticks) unsalted butter
-- [ ] 3/4 cup packed dark brown sugar
-- [ ] 1/2 cup granulated white sugar
-- [ ] 2 large eggs, room temperature
-- [ ] 2 teaspoons pure vanilla extract
-- [ ] 2 1/4 cups all-purpose flour
+- [ ] 2 cups all-purpose flour
+- [ ] 1 cup (2 sticks) butter, softened
+- [ ] 3/4 cup granulated sugar
+- [ ] 3/4 cup packed brown sugar
+- [ ] 2 large eggs
+- [ ] 2 teaspoons vanilla extract
 - [ ] 1 teaspoon baking soda
-- [ ] 1 teaspoon kosher salt
-- [ ] 1 1/2 cups semi-sweet chocolate chunks or chips
-- [ ] Flaky sea salt (Maldon) for topping
+- [ ] 1 teaspoon salt
+- [ ] 2 cups semi-sweet chocolate chips
+- [ ] 1 cup chopped walnuts (optional)
 
 ## Instructions
 
-1. [ ] Melt butter in a stainless saucepan over medium heat. Swirl occasionally for 4-5 minutes as butter foams and crackles. Once nutty aroma develops and brown specks appear on bottom, pour into heatproof bowl and let cool for 15 minutes.
-2. [ ] In a large bowl, whisk cooled browned butter with dark brown sugar and granulated sugar for 2 minutes until glossy.
-3. [ ] Whisk in eggs one at a time, followed by vanilla extract, until mixture is pale and smooth.
-4. [ ] Fold in flour, baking soda, and kosher salt with a spatula until just combined without overmixing.
-5. [ ] Fold in chocolate chunks. Chill dough in refrigerator for at least 30 minutes (or overnight for deeper caramel flavor).
-6. [ ] Preheat oven to 350°F (175°C) and line two baking sheets with parchment paper.
-7. [ ] Scoop 2-tablespoon dough mounds 2 inches apart onto baking sheets.
-8. [ ] Bake for 10 to 12 minutes until edges are set and golden but centers remain soft.
-9. [ ] Immediately sprinkle tops with flaky sea salt. Let cool on baking sheet for 5 minutes, then transfer to a wire rack.
+1. [ ] Preheat oven to 350°F (175°C)
+2. [ ] In a large bowl, cream together butter, granulated sugar, and brown sugar until light and fluffy
+3. [ ] Beat in eggs one at a time, then stir in vanilla extract
+4. [ ] In a separate bowl, combine flour, baking soda, and salt
+5. [ ] Gradually blend the dry ingredients into the wet mixture
+6. [ ] Stir in chocolate chips and walnuts (if using)
+7. [ ] Drop rounded tablespoons of dough onto ungreased cookie sheets, spacing them 2 inches apart
+8. [ ] Bake for 9-11 minutes or until golden brown around the edges
+9. [ ] Cool on baking sheet for 2 minutes
+10. [ ] Transfer cookies to a wire rack to cool completely
+
+## Notes
+
+- For chewier cookies, slightly underbake them
+- Store in an airtight container for up to 1 week
+- Dough can be frozen for up to 3 months
+- For best results, use room temperature ingredients
 `
   },
   {

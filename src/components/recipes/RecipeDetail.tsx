@@ -707,10 +707,13 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
         };
 
         for (const line of lines) {
-          const listMatch = line.match(/^\s*[-*]\s+(.+)$/);
+          const listMatch = line.match(/^\s*(?:[-*]|\d+\.)\s+(?:\[[ xX]?\]\s*)?(.+)$/);
           if (listMatch) {
             flushPara();
             currentList.push(listMatch[1]);
+          } else if (line.trim() === '') {
+            flushList();
+            flushPara();
           } else {
             flushList();
             paraLines.push(line);

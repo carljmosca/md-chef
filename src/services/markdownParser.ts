@@ -241,7 +241,7 @@ export function parseRecipeBody(
       continue;
     }
 
-    if (/^##\s+Notes/i.test(line)) {
+    if (/^#{1,3}\s+(?:Chef's\s+|Baker's\s+|Recipe\s+)?(?:Notes?|Tips?)(?:\s*[:-]?.*)?$/i.test(line)) {
       currentMode = 'notes';
       currentSection = '';
       continue;

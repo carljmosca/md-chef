@@ -79,17 +79,32 @@ export const RecipeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       if (stored.length > 0) {
-        // Re-parse any cached recipes missing notes (migration for older cached data)
-        const needsReparse = stored.filter((r) => r.rawContent && r.notes === undefined);
-        if (needsReparse.length > 0) {
-          for (const r of needsReparse) {
+        // Check if any seed recipes in stored cache need updating from latest seed data (e.g. notes or updated content)
+        const seedMap = new Map(getSeedRecipes().map((s) => [s.path, s]));
+        const updatedRecipes: Recipe[] = [];
+
+        for (const r of stored) {
+          const seed = seedMap.get(r.path);
+          if (seed && (!r.notes && seed.notes)) {
+            r.notes = seed.notes;
+            r.rawContent = seed.rawContent;
+            r.frontmatter = seed.frontmatter;
+            r.ingredients = seed.ingredients;
+            r.instructions = seed.instructions;
+            r.sha = seed.sha;
+            updatedRecipes.push(r);
+          } else if (r.rawContent && r.notes === undefined) {
             const { body } = extractFrontmatter(r.rawContent);
             const { notes } = parseRecipeBody(body, r.path);
             if (notes) {
               r.notes = notes;
+              updatedRecipes.push(r);
             }
           }
-          await saveRecipesToDB(needsReparse);
+        }
+
+        if (updatedRecipes.length > 0) {
+          await saveRecipesToDB(updatedRecipes);
         }
 
         const enriched = stored.map((r) => ({
