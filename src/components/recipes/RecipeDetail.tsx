@@ -15,7 +15,6 @@ import {
   Plus,
   Minus,
   Timer as TimerIcon,
-  FileCode,
   RotateCcw,
   User,
   Globe
@@ -48,7 +47,6 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   const [checkedSteps, setCheckedSteps] = useState<Set<number>>(new Set());
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [showMealPlanMenu, setShowMealPlanMenu] = useState(false);
-  const [showRawMarkdown, setShowRawMarkdown] = useState(false);
   const [copiedNotice, setCopiedNotice] = useState<string | null>(null);
   const [addedToCartNotice, setAddedToCartNotice] = useState(false);
 
@@ -674,7 +672,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
         </section>
       </div>
 
-      {/* Recipe Footer: Source Credit & Raw Markdown Toggle */}
+      {/* Recipe Footer: Source Credit */}
       <footer className="pt-6 border-t border-stone-200 dark:border-stone-800 flex flex-wrap items-center justify-between gap-4 text-xs text-stone-500 dark:text-stone-400">
         <div className="flex flex-wrap items-center gap-3">
           {recipe.frontmatter.credit && (
