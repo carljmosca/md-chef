@@ -697,13 +697,6 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
           )}
         </div>
 
-        <button
-          onClick={() => setShowRawMarkdown(!showRawMarkdown)}
-          className="flex items-center gap-1.5 text-stone-500 hover:text-stone-800 dark:hover:text-stone-200"
-        >
-          <FileCode className="w-3.5 h-3.5" />
-          <span>{showRawMarkdown ? 'Hide Raw Markdown' : 'View Git Markdown Source'}</span>
-        </button>
       </footer>
 
       {/* Raw Markdown Source Viewer */}
