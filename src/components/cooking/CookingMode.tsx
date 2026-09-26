@@ -19,6 +19,7 @@ import { CookingTimer } from './CookingTimer';
 import { speakText, stopSpeaking, isSpeechSupported } from '../../services/speech';
 import { playStepCompleteSound } from '../../services/sound';
 import { useSettings } from '../../context/SettingsContext';
+import { renderMarkdownInline } from '../common/MarkdownText';
 
 interface CookingModeProps {
   recipe: Recipe;
@@ -410,7 +411,7 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
                         ? 'text-stone-300'
                         : 'text-stone-100'
                     }`}>
-                      {currentStep?.text}
+                      {renderMarkdownInline(currentStep?.text)}
                     </p>
 
                     {completedSteps.has(currentStepIndex) ? (
@@ -504,13 +505,13 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
                 <div key={group.section || gIdx} className="space-y-2">
                   {group.section && (
                     <div className="text-xs font-bold uppercase tracking-wider text-brand-400 font-sans border-b border-stone-800 pb-1">
-                      {group.section}
+                      {renderMarkdownInline(group.section)}
                     </div>
                   )}
                   <div className="space-y-2 divide-y divide-stone-800/60">
                     {group.items.map((ing) => (
                       <div key={ing.id} className="pt-2 text-sm text-stone-300 leading-snug">
-                        • {ing.raw}
+                        • {renderMarkdownInline(ing.raw)}
                       </div>
                     ))}
                   </div>
@@ -594,7 +595,7 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
                           isDone ? 'text-stone-500 line-through' : 'text-stone-200'
                         }`}
                       >
-                        {step.text}
+                        {renderMarkdownInline(step.text)}
                       </p>
                     </div>
                   </div>
@@ -629,7 +630,7 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
                     elements.push(
                       <ul key={`cooking-notes-ul-${elements.length}`} className="list-disc list-inside space-y-1.5 text-sm leading-relaxed text-stone-300">
                         {currentList.map((item, i) => (
-                          <li key={i}>{item}</li>
+                          <li key={i}>{renderMarkdownInline(item)}</li>
                         ))}
                       </ul>
                     );
@@ -642,7 +643,7 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
                   if (text) {
                     elements.push(
                       <p key={`cooking-notes-p-${elements.length}`} className="text-sm leading-relaxed text-stone-300">
-                        {text}
+                        {renderMarkdownInline(text)}
                       </p>
                     );
                   }

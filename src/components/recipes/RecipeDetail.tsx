@@ -22,6 +22,7 @@ import {
 import { Recipe } from '../../types/recipe';
 import { Badge } from '../common/Badge';
 import { scaleIngredientQuantity } from '../../services/markdownParser';
+import { renderMarkdownInline } from '../common/MarkdownText';
 import { useShopping } from '../../context/ShoppingContext';
 import { useMealPlan } from '../../context/MealPlanContext';
 
@@ -506,7 +507,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
                 {group.section && (
                   <div className="flex items-center gap-2 mb-2 px-1">
                     <h3 className="font-serif font-bold text-sm tracking-wide text-brand-700 dark:text-brand-400">
-                      {group.section}
+                      {renderMarkdownInline(group.section)}
                     </h3>
                     <span className="text-[11px] font-sans font-medium text-stone-400 dark:text-stone-500">
                       ({group.items.length})
@@ -542,7 +543,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
                               : 'text-stone-800 dark:text-stone-200'
                           }`}
                         >
-                          {scaledText}
+                          {renderMarkdownInline(scaledText)}
                         </span>
                       </div>
                     );
@@ -591,7 +592,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
                 {group.section && (
                   <div className="flex items-center gap-2 pt-1 px-1">
                     <h3 className="font-serif font-bold text-base text-stone-800 dark:text-stone-200">
-                      {group.section}
+                      {renderMarkdownInline(group.section)}
                     </h3>
                     <span className="text-xs font-sans font-medium text-stone-400 dark:text-stone-500">
                       ({group.items.length} {group.items.length === 1 ? 'step' : 'steps'})
@@ -645,7 +646,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
                                 : 'text-stone-800 dark:text-stone-200'
                             }`}
                           >
-                            {step.text}
+                            {renderMarkdownInline(step.text)}
                           </p>
 
                           {/* Detected Timers in Step */}
@@ -686,7 +687,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
             elements.push(
               <ul key={`notes-ul-${elements.length}`} className="list-disc list-inside space-y-1.5 text-sm leading-relaxed text-stone-700 dark:text-stone-300">
                 {currentList.map((item, i) => (
-                  <li key={i}>{item}</li>
+                  <li key={i}>{renderMarkdownInline(item)}</li>
                 ))}
               </ul>
             );
@@ -699,7 +700,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
           if (text) {
             elements.push(
               <p key={`notes-p-${elements.length}`} className="text-sm leading-relaxed text-stone-700 dark:text-stone-300">
-                {text}
+                {renderMarkdownInline(text)}
               </p>
             );
           }

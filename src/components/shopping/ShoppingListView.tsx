@@ -14,6 +14,7 @@ import {
 import { useShopping } from '../../context/ShoppingContext';
 import { ShoppingItem } from '../../types/recipe';
 import { formatForGoogleKeep, openGoogleKeep } from '../../services/shoppingFormat';
+import { renderMarkdownInline } from '../../services/inlineMarkdown';
 
 const AISLES: ShoppingItem['category'][] = [
   'Produce',
@@ -281,7 +282,7 @@ export const ShoppingListView: React.FC = () => {
                               : 'text-stone-800 dark:text-stone-200 font-medium'
                           }`}
                         >
-                          {item.name}
+                          {renderMarkdownInline(item.name)}
                         </span>
                         {item.recipeSource && (
                           <span className="text-[10px] text-stone-400 block">
