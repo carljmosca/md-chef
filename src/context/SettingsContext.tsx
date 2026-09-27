@@ -16,7 +16,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoSyncOnLaunch: true,
   theme: 'system',
   keepAwakeInCookingMode: true,
-  speechVoiceRate: 1.0
+  speechVoiceRate: 1.0,
+  customDomain: ''
 };
 
 const SettingsContext = createContext<SettingsContextValue | undefined>(undefined);

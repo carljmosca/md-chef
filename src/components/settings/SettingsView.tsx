@@ -11,7 +11,8 @@ import {
   AlertCircle,
   RotateCcw,
   ExternalLink,
-  Download
+  Download,
+  Globe
 } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
 import { useRecipes } from '../../context/RecipeContext';
@@ -34,7 +35,8 @@ export const SettingsView: React.FC = () => {
     autoSyncOnLaunch: settings.autoSyncOnLaunch,
     theme: settings.theme,
     keepAwakeInCookingMode: settings.keepAwakeInCookingMode,
-    speechVoiceRate: settings.speechVoiceRate || 1.0
+    speechVoiceRate: settings.speechVoiceRate || 1.0,
+    customDomain: settings.customDomain || ''
   });
 
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
@@ -280,6 +282,28 @@ export const SettingsView: React.FC = () => {
             placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
             className="w-full px-3 py-2 text-sm rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 font-mono focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1 flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-stone-400" />
+              <span>Custom Domain / Public Share URL (Optional)</span>
+            </span>
+            <span className="text-[10px] text-stone-400 font-normal">
+              For custom domain deployments
+            </span>
+          </label>
+          <input
+            type="text"
+            value={formData.customDomain}
+            onChange={(e) => setFormData({ ...formData, customDomain: e.target.value })}
+            placeholder="e.g. https://recipes.mydomain.com (leave blank to use current URL)"
+            className="w-full px-3 py-2 text-sm rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
+          <p className="text-[11px] text-stone-400 mt-1">
+            When set, recipe share links and email invitations will use this custom domain instead of Netlify or localhost URLs.
+          </p>
         </div>
 
         <div className="flex items-center gap-3">

@@ -23,8 +23,10 @@ import { Recipe } from '../../types/recipe';
 import { Badge } from '../common/Badge';
 import { scaleIngredientQuantity } from '../../services/markdownParser';
 import { renderMarkdownInline } from '../common/MarkdownText';
+import { buildRecipeShareUrl } from '../../services/shareUrl';
 import { useShopping } from '../../context/ShoppingContext';
 import { useMealPlan } from '../../context/MealPlanContext';
+import { useSettings } from '../../context/SettingsContext';
 
 interface RecipeDetailProps {
   recipe: Recipe;
@@ -39,6 +41,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   onStartCooking,
   onToggleFavorite
 }) => {
+  const { settings } = useSettings();
   const { addIngredientsFromRecipe } = useShopping();
   const { setMealForDay } = useMealPlan();
 
@@ -74,7 +77,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   };
 
   const handleShare = async () => {
-    const url = `${window.location.origin}${window.location.pathname}#/recipe/${encodeURIComponent(recipe.path)}`;
+    const url = buildRecipeShareUrl(recipe.path, settings.customDomain);
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
@@ -91,7 +94,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   };
 
   const copyRecipeLink = () => {
-    const url = `${window.location.origin}${window.location.pathname}#/recipe/${encodeURIComponent(recipe.path)}`;
+    const url = buildRecipeShareUrl(recipe.path, settings.customDomain);
     navigator.clipboard.writeText(url);
     setCopiedNotice('Recipe link copied to clipboard!');
     setTimeout(() => setCopiedNotice(null), 2500);
@@ -129,7 +132,9 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   }, [recipe.instructions]);
 
   const copyFormattedRecipeText = () => {
+    const recipeUrl = buildRecipeShareUrl(recipe.path, settings.customDomain);
     let text = `🍳 ${recipe.frontmatter.title}\n`;
+    text += `Link: ${recipeUrl}\n`;
     if (recipe.frontmatter.servings) text += `Servings: ${servings}\n`;
     if (recipe.frontmatter.prep_time) text += `Prep: ${recipe.frontmatter.prep_time} | `;
     if (recipe.frontmatter.cook_time) text += `Cook: ${recipe.frontmatter.cook_time}\n`;
@@ -160,8 +165,9 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   };
 
   const emailRecipe = () => {
+    const recipeUrl = buildRecipeShareUrl(recipe.path, settings.customDomain);
     const subject = encodeURIComponent(`Recipe: ${recipe.frontmatter.title}`);
-    let body = `Hi!\n\nHere is the recipe for ${recipe.frontmatter.title} (${servings} servings):\n\nINGREDIENTS:\n`;
+    let body = `Hi!\n\nHere is the recipe for ${recipe.frontmatter.title} (${servings} servings):\n\nView Online: ${recipeUrl}\n\nINGREDIENTS:\n`;
     let lastSection: string | undefined = undefined;
     recipe.ingredients.forEach((ing) => {
       if (ing.section && ing.section !== lastSection) {
@@ -180,7 +186,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
       body += `${i + 1}. ${step.text}\n`;
     });
     if (recipe.notes) body += `\nNOTES:\n${recipe.notes}\n`;
-    body += `\nShared via MD-Chef Recipe Companion`;
+    body += `\nShared via MD-Chef Recipe Companion (${recipeUrl})`;
 
     window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
     setShowShareMenu(false);

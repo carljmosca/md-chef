@@ -94,6 +94,7 @@ export interface AppSettings {
   theme: 'system' | 'light' | 'dark';
   keepAwakeInCookingMode: boolean;
   speechVoiceRate: number; // default 1.0
+  customDomain?: string; // e.g. "https://recipes.mydomain.com"
 }
 
 export interface ShoppingItem {
