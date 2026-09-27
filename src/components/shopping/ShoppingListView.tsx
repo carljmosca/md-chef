@@ -263,9 +263,9 @@ export const ShoppingListView: React.FC = () => {
                     onClick={() => toggleItem(item.id)}
                     className="py-2.5 px-1 flex items-center justify-between group cursor-pointer hover:bg-stone-50/60 dark:hover:bg-stone-800/30 rounded-lg transition-colors"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div
-                        className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
+                        className={`w-5 h-5 shrink-0 rounded-md border flex items-center justify-center transition-all ${
                           item.checked
                             ? 'bg-emerald-500 border-emerald-500 text-white'
                             : 'border-stone-300 dark:border-stone-600 group-hover:border-stone-400'
@@ -274,7 +274,7 @@ export const ShoppingListView: React.FC = () => {
                         {item.checked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                       </div>
 
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <span
                           className={`text-sm leading-snug transition-all ${
                             item.checked

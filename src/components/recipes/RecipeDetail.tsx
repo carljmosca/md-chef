@@ -527,7 +527,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
                         className="py-3 flex items-start gap-3 cursor-pointer group hover:bg-stone-50/50 dark:hover:bg-stone-800/30 px-1 rounded-lg transition-colors"
                       >
                         <div
-                          className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
+                          className={`mt-0.5 w-5 h-5 shrink-0 rounded-md border flex items-center justify-center transition-all ${
                             isChecked
                               ? 'bg-emerald-500 border-emerald-500 text-white'
                               : 'border-stone-300 dark:border-stone-600 group-hover:border-stone-400'
@@ -537,7 +537,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
                         </div>
 
                         <span
-                          className={`text-sm leading-snug transition-all ${
+                          className={`flex-1 min-w-0 text-sm leading-snug transition-all ${
                             isChecked
                               ? 'text-stone-400 dark:text-stone-500 line-through'
                               : 'text-stone-800 dark:text-stone-200'
