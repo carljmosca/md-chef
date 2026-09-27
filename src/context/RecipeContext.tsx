@@ -84,6 +84,15 @@ export const RecipeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const updatedRecipes: Recipe[] = [];
 
         for (const r of stored) {
+          // Ensure frontmatter and title is always a valid string
+          if (!r.frontmatter) {
+            r.frontmatter = { title: r.filename || 'Untitled Recipe' };
+            updatedRecipes.push(r);
+          } else if (typeof r.frontmatter.title !== 'string') {
+            r.frontmatter.title = String(r.frontmatter.title || r.filename || 'Untitled Recipe');
+            updatedRecipes.push(r);
+          }
+
           const seed = seedMap.get(r.path);
           if (seed && (!r.notes && seed.notes)) {
             r.notes = seed.notes;
@@ -286,13 +295,13 @@ export const RecipeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // Search query
       if (q) {
-        const titleMatch = r.frontmatter.title?.toLowerCase().includes(q);
-        const tagMatch = r.frontmatter.tags?.some((t) => t.toLowerCase().includes(q));
-        const categoryMatch = r.category.toLowerCase().includes(q);
-        const ingredientMatch = r.ingredients.some((ing) => ing.raw.toLowerCase().includes(q));
-        const instructionMatch = r.instructions.some((inst) => inst.text.toLowerCase().includes(q));
-        const creditMatch = r.frontmatter.credit?.toLowerCase().includes(q);
-        const sourceMatch = r.frontmatter.source?.toLowerCase().includes(q);
+        const titleMatch = String(r.frontmatter?.title || '').toLowerCase().includes(q);
+        const tagMatch = r.frontmatter?.tags?.some((t) => String(t).toLowerCase().includes(q));
+        const categoryMatch = String(r.category || '').toLowerCase().includes(q);
+        const ingredientMatch = r.ingredients?.some((ing) => String(ing.raw || '').toLowerCase().includes(q));
+        const instructionMatch = r.instructions?.some((inst) => String(inst.text || '').toLowerCase().includes(q));
+        const creditMatch = String(r.frontmatter?.credit || '').toLowerCase().includes(q);
+        const sourceMatch = String(r.frontmatter?.source || '').toLowerCase().includes(q);
 
         if (
           !titleMatch &&

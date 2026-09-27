@@ -29,18 +29,24 @@ export const RecipeGrid: React.FC<RecipeGridProps> = ({ onSelectRecipe, onCookRe
 
   const [sortBy, setSortBy] = useState<'title' | 'category' | 'ingredients'>('title');
 
-  const sortedRecipes = [...filteredRecipes].sort((a, b) => {
-    if (sortBy === 'title') {
-      return a.frontmatter.title.localeCompare(b.frontmatter.title);
-    }
-    if (sortBy === 'category') {
-      return a.category.localeCompare(b.category);
-    }
-    if (sortBy === 'ingredients') {
-      return a.ingredients.length - b.ingredients.length;
-    }
-    return 0;
-  });
+  const sortedRecipes = React.useMemo(() => {
+    return [...filteredRecipes].sort((a, b) => {
+      if (sortBy === 'title') {
+        const titleA = String(a.frontmatter?.title || a.filename || 'Untitled Recipe');
+        const titleB = String(b.frontmatter?.title || b.filename || 'Untitled Recipe');
+        return titleA.localeCompare(titleB, undefined, { sensitivity: 'base', numeric: true });
+      }
+      if (sortBy === 'category') {
+        const catA = String(a.category || '');
+        const catB = String(b.category || '');
+        return catA.localeCompare(catB, undefined, { sensitivity: 'base' });
+      }
+      if (sortBy === 'ingredients') {
+        return (a.ingredients?.length || 0) - (b.ingredients?.length || 0);
+      }
+      return 0;
+    });
+  }, [filteredRecipes, sortBy]);
 
   return (
     <div className="space-y-6">

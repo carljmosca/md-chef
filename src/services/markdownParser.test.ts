@@ -244,3 +244,24 @@ test('Parse header variations for Notes (e.g. ## Chef\'s Notes, ## Tips, ### Not
   }
 });
 
+test('extractFrontmatter ensures title is always a valid string', () => {
+  // Numeric title
+  const numericMd = `---\ntitle: 12345\n---\n## Ingredients\n- 1 egg`;
+  const { frontmatter: fm1 } = extractFrontmatter(numericMd);
+  assert.strictEqual(typeof fm1.title, 'string');
+  assert.strictEqual(fm1.title, '12345');
+
+  // Missing title but has markdown header #
+  const headerMd = `---\nprep_time: 10\n---\n# Delicious Pizza\n## Ingredients\n- 1 crust`;
+  const { frontmatter: fm2 } = extractFrontmatter(headerMd);
+  assert.strictEqual(typeof fm2.title, 'string');
+  assert.strictEqual(fm2.title, 'Delicious Pizza');
+
+  // Empty frontmatter with no header
+  const emptyMd = `---\n---\nSome text`;
+  const { frontmatter: fm3 } = extractFrontmatter(emptyMd);
+  assert.strictEqual(typeof fm3.title, 'string');
+  assert.strictEqual(fm3.title, 'Untitled Recipe');
+});
+
+

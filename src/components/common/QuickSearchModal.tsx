@@ -44,12 +44,12 @@ export const QuickSearchModal: React.FC<QuickSearchModalProps> = ({
   const q = query.trim().toLowerCase();
   const results = q
     ? recipes.filter((r) => {
-        const titleMatch = r.frontmatter.title.toLowerCase().includes(q);
-        const catMatch = r.category.toLowerCase().includes(q);
-        const tagMatch = r.frontmatter.tags?.some((t) => t.toLowerCase().includes(q));
-        const ingMatch = r.ingredients.some((ing) => ing.raw.toLowerCase().includes(q));
-        const creditMatch = r.frontmatter.credit?.toLowerCase().includes(q);
-        const sourceMatch = r.frontmatter.source?.toLowerCase().includes(q);
+        const titleMatch = String(r.frontmatter?.title || '').toLowerCase().includes(q);
+        const catMatch = String(r.category || '').toLowerCase().includes(q);
+        const tagMatch = r.frontmatter?.tags?.some((t) => String(t).toLowerCase().includes(q));
+        const ingMatch = r.ingredients?.some((ing) => String(ing.raw || '').toLowerCase().includes(q));
+        const creditMatch = String(r.frontmatter?.credit || '').toLowerCase().includes(q);
+        const sourceMatch = String(r.frontmatter?.source || '').toLowerCase().includes(q);
         return titleMatch || catMatch || tagMatch || ingMatch || creditMatch || sourceMatch;
       })
     : recipes.slice(0, 8);

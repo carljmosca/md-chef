@@ -92,6 +92,25 @@ export function extractFrontmatter(rawContent: string): {
     frontmatter.difficulty = 'Medium' as Difficulty;
   }
 
+  // Ensure title is always a valid string
+  if (
+    typeof frontmatter.title !== 'string' ||
+    frontmatter.title.trim() === '' ||
+    frontmatter.title === 'Untitled Recipe'
+  ) {
+    const titleMatch = body.match(/^#\s+(.+)$/m);
+    if (titleMatch) {
+      frontmatter.title = titleMatch[1].trim();
+    } else if (typeof frontmatter.title !== 'string' || frontmatter.title.trim() === '') {
+      frontmatter.title =
+        Array.isArray(frontmatter.title) && frontmatter.title[0]
+          ? String(frontmatter.title[0])
+          : 'Untitled Recipe';
+    }
+  } else {
+    frontmatter.title = String(frontmatter.title).trim();
+  }
+
   return { frontmatter, body };
 }
 
