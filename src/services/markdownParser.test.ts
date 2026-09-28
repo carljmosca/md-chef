@@ -264,4 +264,33 @@ test('extractFrontmatter ensures title is always a valid string', () => {
   assert.strictEqual(fm3.title, 'Untitled Recipe');
 });
 
+test('Parse notes with subheadings and multiple sections', () => {
+  const md = `## Ingredients
+- [ ] 2 cups flour
+
+## Instructions
+1. [ ] Bake at 350F for 20 minutes
+
+## Notes
+### Storage Tips
+- Store in an airtight container for up to 3 days.
+
+### Variations
+- Add 1/2 cup chocolate chips for a sweet version.
+
+**Make Ahead:**
+- Dough can be prepared the night before.
+`;
+
+  const { notes } = parseRecipeBody(md, 'test-notes-subtitles');
+  assert.ok(notes);
+  assert.ok(notes.includes('### Storage Tips'));
+  assert.ok(notes.includes('Store in an airtight container for up to 3 days.'));
+  assert.ok(notes.includes('### Variations'));
+  assert.ok(notes.includes('Add 1/2 cup chocolate chips for a sweet version.'));
+  assert.ok(notes.includes('**Make Ahead:**'));
+  assert.ok(notes.includes('Dough can be prepared the night before.'));
+});
+
+
 

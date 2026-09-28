@@ -260,7 +260,7 @@ export function parseRecipeBody(
       continue;
     }
 
-    if (/^#{1,3}\s+(?:Chef's\s+|Baker's\s+|Recipe\s+)?(?:Notes?|Tips?)(?:\s*[:-]?.*)?$/i.test(line)) {
+    if (currentMode !== 'notes' && /^#{1,3}\s+(?:Chef's\s+|Baker's\s+|Recipe\s+)?(?:Notes?|Tips?)(?:\s*[:-]?.*)?$/i.test(line)) {
       currentMode = 'notes';
       currentSection = '';
       continue;
@@ -270,6 +270,7 @@ export function parseRecipeBody(
       // Another secondary section
       if (line.toLowerCase().includes('ingredient')) currentMode = 'ingredients';
       else if (line.toLowerCase().includes('instruction') || line.toLowerCase().includes('step') || line.toLowerCase().includes('direction') || line.toLowerCase().includes('method')) currentMode = 'instructions';
+      else if (/^##\s+(?:Chef's\s+|Baker's\s+|Recipe\s+)?(?:Notes?|Tips?)(?:\s*[:-]?.*)?$/i.test(line)) currentMode = 'notes';
       else currentMode = 'none';
       currentSection = '';
       continue;

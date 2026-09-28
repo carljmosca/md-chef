@@ -714,8 +714,21 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
         };
 
         for (const line of lines) {
+          const subheaderMatch = line.trim().match(/^(?:#{3,6}\s+(.+?)(?:\s+#+)?|\*{2}(.+?)\*{2}:?)$/);
           const listMatch = line.match(/^\s*(?:[-*]|\d+\.)\s+(?:\[[ xX]?\]\s*)?(.+)$/);
-          if (listMatch) {
+
+          if (subheaderMatch) {
+            flushList();
+            flushPara();
+            const heading = (subheaderMatch[1] || subheaderMatch[2]).replace(/:$/, '').trim();
+            if (heading) {
+              elements.push(
+                <h3 key={`notes-sub-${elements.length}`} className="font-serif font-bold text-sm tracking-wide text-brand-700 dark:text-brand-400 pt-3 pb-1 border-b border-stone-100 dark:border-stone-800">
+                  {renderMarkdownInline(heading)}
+                </h3>
+              );
+            }
+          } else if (listMatch) {
             flushPara();
             currentList.push(listMatch[1]);
           } else if (line.trim() === '') {

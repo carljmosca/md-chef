@@ -651,8 +651,21 @@ export const CookingMode: React.FC<CookingModeProps> = ({ recipe, onExit }) => {
                 };
 
                 for (const line of lines) {
+                  const subheaderMatch = line.trim().match(/^(?:#{3,6}\s+(.+?)(?:\s+#+)?|\*{2}(.+?)\*{2}:?)$/);
                   const listMatch = line.match(/^\s*(?:[-*]|\d+\.)\s+(?:\[[ xX]?\]\s*)?(.+)$/);
-                  if (listMatch) {
+
+                  if (subheaderMatch) {
+                    flushList();
+                    flushPara();
+                    const heading = (subheaderMatch[1] || subheaderMatch[2]).replace(/:$/, '').trim();
+                    if (heading) {
+                      elements.push(
+                        <h4 key={`cooking-notes-sub-${elements.length}`} className="font-serif font-bold text-sm tracking-wide text-brand-400 pt-3 pb-1 border-b border-stone-800/80">
+                          {renderMarkdownInline(heading)}
+                        </h4>
+                      );
+                    }
+                  } else if (listMatch) {
                     flushPara();
                     currentList.push(listMatch[1]);
                   } else if (line.trim() === '') {
