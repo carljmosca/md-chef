@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SettingsProvider } from './context/SettingsContext';
+import { SettingsProvider, useSettings } from './context/SettingsContext';
 import { RecipeProvider, useRecipes } from './context/RecipeContext';
 import { ShoppingProvider, useShopping } from './context/ShoppingContext';
 import { MealPlanProvider, useMealPlan } from './context/MealPlanContext';
@@ -20,6 +20,7 @@ const AppContent: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<'recipes' | 'meals' | 'shopping' | 'ai' | 'favorites' | 'settings'>('recipes');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
+  const { settings } = useSettings();
   const {
     recipes,
     activeRecipe,
@@ -32,6 +33,13 @@ const AppContent: React.FC = () => {
 
   const { addIngredientsFromRecipe, addItem } = useShopping();
   const { setMealForDay } = useMealPlan();
+
+  // If AI Chef is turned off in settings while on the AI tab, navigate back to recipes
+  useEffect(() => {
+    if (currentTab === 'ai' && !settings.enableAIChef) {
+      setCurrentTab('recipes');
+    }
+  }, [currentTab, settings.enableAIChef]);
 
   // Register WebMCP Tools in browser context
   useEffect(() => {
@@ -100,7 +108,7 @@ const AppContent: React.FC = () => {
 
             {currentTab === 'shopping' && <ShoppingListView />}
 
-            {currentTab === 'ai' && (
+            {currentTab === 'ai' && settings.enableAIChef && (
               <AIChefView
                 onSelectRecipe={(r) => {
                   setActiveRecipe(r);

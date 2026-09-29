@@ -17,7 +17,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
   keepAwakeInCookingMode: true,
   speechVoiceRate: 1.0,
-  customDomain: ''
+  customDomain: '',
+  enableAIChef: false
 };
 
 const SettingsContext = createContext<SettingsContextValue | undefined>(undefined);

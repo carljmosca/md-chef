@@ -1,6 +1,7 @@
 import React from 'react';
 import { BookOpen, Calendar, ShoppingBag, Settings, Bot } from 'lucide-react';
 import { useShopping } from '../../context/ShoppingContext';
+import { useSettings } from '../../context/SettingsContext';
 
 interface BottomNavProps {
   currentTab: 'recipes' | 'meals' | 'shopping' | 'ai' | 'favorites' | 'settings';
@@ -16,11 +17,12 @@ interface TabItem {
 
 export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, setCurrentTab }) => {
   const { totalCount, checkedCount } = useShopping();
+  const { settings } = useSettings();
   const uncompletedCount = totalCount - checkedCount;
 
   const tabs: TabItem[] = [
     { id: 'recipes', label: 'Recipes', icon: BookOpen },
-    { id: 'ai', label: 'AI Chef', icon: Bot },
+    ...(settings.enableAIChef ? [{ id: 'ai' as const, label: 'AI Chef', icon: Bot }] : []),
     { id: 'meals', label: 'Planner', icon: Calendar },
     { id: 'shopping', label: 'Shopping', icon: ShoppingBag, badge: uncompletedCount > 0 ? uncompletedCount : undefined },
     { id: 'settings', label: 'Settings', icon: Settings }

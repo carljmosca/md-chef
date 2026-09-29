@@ -12,6 +12,7 @@ import {
   Bot
 } from 'lucide-react';
 import { useRecipes } from '../../context/RecipeContext';
+import { useSettings } from '../../context/SettingsContext';
 
 interface NavbarProps {
   currentTab: 'recipes' | 'meals' | 'shopping' | 'ai' | 'settings';
@@ -21,6 +22,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, onOpenSearch }) => {
   const { recipes, syncState, triggerSync } = useRecipes();
+  const { settings } = useSettings();
 
   return (
     <header className="sticky top-0 z-30 bg-white/80 dark:bg-stone-900/80 backdrop-blur-md border-b border-stone-200 dark:border-stone-800 transition-colors">
@@ -83,22 +85,24 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, onOpe
             Shopping List
           </button>
 
-          <button
-            onClick={() => setCurrentTab('ai')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              currentTab === 'ai'
-                ? 'bg-gradient-to-r from-brand-600 to-amber-600 text-white shadow-sm'
-                : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
-            }`}
-          >
-            <Bot className={`w-4 h-4 ${currentTab === 'ai' ? 'text-white' : 'text-brand-600 dark:text-brand-400'}`} />
-            <span>AI Chef</span>
-            <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
-              currentTab === 'ai' ? 'bg-white/20 text-white' : 'bg-brand-100 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300'
-            }`}>
-              WebMCP
-            </span>
-          </button>
+          {settings.enableAIChef && (
+            <button
+              onClick={() => setCurrentTab('ai')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                currentTab === 'ai'
+                  ? 'bg-gradient-to-r from-brand-600 to-amber-600 text-white shadow-sm'
+                  : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
+              }`}
+            >
+              <Bot className={`w-4 h-4 ${currentTab === 'ai' ? 'text-white' : 'text-brand-600 dark:text-brand-400'}`} />
+              <span>AI Chef</span>
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
+                currentTab === 'ai' ? 'bg-white/20 text-white' : 'bg-brand-100 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300'
+              }`}>
+                WebMCP
+              </span>
+            </button>
+          )}
 
           <button
             onClick={() => setCurrentTab('settings')}

@@ -39,7 +39,8 @@ export const SettingsView: React.FC = () => {
     theme: settings.theme,
     keepAwakeInCookingMode: settings.keepAwakeInCookingMode,
     speechVoiceRate: settings.speechVoiceRate || 1.0,
-    customDomain: settings.customDomain || ''
+    customDomain: settings.customDomain || '',
+    enableAIChef: settings.enableAIChef ?? false
   });
 
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
@@ -52,6 +53,22 @@ export const SettingsView: React.FC = () => {
     ? `${window.location.origin}/mcp`
     : 'http://localhost:5173/mcp';
   const openApiUrl = `${mcpEndpointUrl}/openapi.json`;
+
+  useEffect(() => {
+    setFormData({
+      repoOwner: settings.repoOwner,
+      repoName: settings.repoName,
+      branch: settings.branch,
+      subdirectory: settings.subdirectory,
+      githubToken: settings.githubToken || '',
+      autoSyncOnLaunch: settings.autoSyncOnLaunch,
+      theme: settings.theme,
+      keepAwakeInCookingMode: settings.keepAwakeInCookingMode,
+      speechVoiceRate: settings.speechVoiceRate || 1.0,
+      customDomain: settings.customDomain || '',
+      enableAIChef: settings.enableAIChef ?? false
+    });
+  }, [settings]);
 
   useEffect(() => {
     getStorageEstimate().then((est) => setStorageInfo(est));
@@ -498,6 +515,30 @@ export const SettingsView: React.FC = () => {
         <p className="text-xs text-stone-500 dark:text-stone-400">
           Connect your AI assistant (Claude, ChatGPT, Microsoft Copilot, or Google Gemini) directly to MD-Chef using the local HTTP endpoints below. Because all recipes, shopping lists, and meal plans are stored locally in your browser, the MCP server runs locally to protect hosting server resources and keep your personal culinary data private.
         </p>
+
+        {/* In-App AI Chef Navigation Toggle */}
+        <div className="flex items-center justify-between p-3.5 bg-stone-50 dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-800">
+          <div>
+            <label htmlFor="enableAIChef" className="text-xs font-bold text-stone-800 dark:text-stone-200 block cursor-pointer">
+              Show "AI Chef" in Navigation
+            </label>
+            <span className="text-[11px] text-stone-500 dark:text-stone-400">
+              Display the conversational AI Chef assistant in the top navigation and mobile bottom bar
+            </span>
+          </div>
+
+          <input
+            type="checkbox"
+            id="enableAIChef"
+            checked={!!formData.enableAIChef}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setFormData((prev) => ({ ...prev, enableAIChef: checked }));
+              updateSettings({ enableAIChef: checked });
+            }}
+            className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 border-stone-300 cursor-pointer ml-3 shrink-0"
+          />
+        </div>
 
         {/* Endpoint 1: Standard MCP HTTP / SSE Endpoint */}
         <div className="space-y-1.5 p-3.5 bg-stone-50 dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-800">

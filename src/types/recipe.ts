@@ -95,6 +95,7 @@ export interface AppSettings {
   keepAwakeInCookingMode: boolean;
   speechVoiceRate: number; // default 1.0
   customDomain?: string; // e.g. "https://recipes.mydomain.com"
+  enableAIChef?: boolean; // default false
 }
 
 export interface ShoppingItem {
