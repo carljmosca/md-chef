@@ -44,10 +44,10 @@ test('formatForGoogleKeepHtml creates separate escaped list entries', () => {
   const result = formatForGoogleKeepHtml('Milk & eggs\n< flour >');
   assert.strictEqual(result, '<ul><li>Milk &amp; eggs</li><li>&lt; flour &gt;</li></ul>');
 
-  const categorized = formatForGoogleKeepHtml('🛒 Grocery List\n\n[PRODUCE]\nApples');
+  const categorized = formatForGoogleKeepHtml('📌 🛒 Grocery List\n\n[PRODUCE]\nApples');
   assert.strictEqual(
     categorized,
-    '<p><strong>🛒 Grocery List</strong></p><p><strong>[PRODUCE]</strong></p><ul><li>Apples</li></ul>'
+    '<p><strong>📌 🛒 Grocery List</strong></p><p><strong>[PRODUCE]</strong></p><ul><li>Apples</li></ul>'
   );
 });
 
@@ -62,7 +62,7 @@ test('formatForGoogleKeep groups by category when includeCategories is true', ()
     includeCategories: true
   });
 
-  assert.ok(result.includes('🛒 Grocery Shopping List'));
+  assert.ok(result.includes('📌 🛒 Grocery Shopping List'));
   assert.ok(result.includes('[PANTRY & DRY GOODS]\n2 cups flour'));
   assert.ok(result.includes('[DAIRY & REFRIGERATED]\n1 cup milk'));
   assert.ok(result.includes('[PRODUCE]\n3 apples'));

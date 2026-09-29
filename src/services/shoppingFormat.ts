@@ -39,7 +39,7 @@ export function formatForGoogleKeepHtml(text: string): string {
     const line = sourceLine.trim();
     if (!line) {
       flushList();
-    } else if (line.startsWith('🛒 ') || /^\[.+\]$/.test(line)) {
+    } else if (line.startsWith('🛒 ') || line.startsWith('📌 ') || /^\[.+\]$/.test(line)) {
       flushList();
       parts.push(`<p><strong>${escapeHtml(line)}</strong></p>`);
     } else {
@@ -111,7 +111,7 @@ export function formatForGoogleKeep(
     categories[cat].push(item);
   }
 
-  let result = `🛒 ${title}\n\n`;
+  let result = `📌 🛒 ${title}\n\n`;
   for (const [category, catItems] of Object.entries(categories)) {
     result += `[${category.toUpperCase()}]\n`;
     for (const it of catItems) {

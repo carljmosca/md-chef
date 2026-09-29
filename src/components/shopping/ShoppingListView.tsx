@@ -111,14 +111,14 @@ export const ShoppingListView: React.FC = () => {
       return;
     }
     if (keepBatches.length > 1) {
-      setCopiedNotice(`✓ ${activeBatch.label} copied! Paste in Keep.`);
+      setCopiedNotice(`✓ ${activeBatch.label} copied! Paste in Keep & click 📌 to pin first.`);
       if (selectedBatchIndex < keepBatches.length - 1) {
         setSelectedBatchIndex(selectedBatchIndex + 1);
       }
     } else {
-      setCopiedNotice('✓ Checklist copied! Opening Google Keep...');
+      setCopiedNotice('✓ Checklist copied! Paste in Keep & click 📌 to pin first.');
     }
-    setTimeout(() => setCopiedNotice(null), 3500);
+    setTimeout(() => setCopiedNotice(null), 4000);
   };
 
   const handleCopyKeepText = async () => {
@@ -388,7 +388,7 @@ export const ShoppingListView: React.FC = () => {
               </div>
               <ol className="list-decimal list-inside space-y-1 text-stone-600 dark:text-stone-300">
                 <li>Click <strong>"Copy & Open Google Keep"</strong> below.</li>
-                <li>In Google Keep, click the <strong>New list (checkbox symbol)</strong>, then paste (<kbd className="px-1 py-0.5 rounded bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[10px] font-mono">Cmd+V</kbd> / <kbd className="px-1 py-0.5 rounded bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[10px] font-mono">Ctrl+V</kbd>). Items are copied as separate checklist rows.</li>
+                <li>In Google Keep, click the <strong>New list (checkbox symbol)</strong>, paste (<kbd className="px-1 py-0.5 rounded bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[10px] font-mono">Cmd+V</kbd> / <kbd className="px-1 py-0.5 rounded bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[10px] font-mono">Ctrl+V</kbd>), and click the <strong>Pushpin (📌)</strong> icon in the top right to keep it pinned first at the top!</li>
               </ol>
             </div>
 
