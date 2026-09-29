@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import { formatForGoogleKeep, GOOGLE_KEEP_URL } from './shoppingFormat.ts';
+import { formatForGoogleKeep, splitIntoKeepBatches, GOOGLE_KEEP_URL } from './shoppingFormat.ts';
 import type { ShoppingItem } from '../types/recipe.ts';
 
 const mockItems: ShoppingItem[] = [
@@ -56,6 +56,37 @@ test('formatForGoogleKeep returns empty string when no items match criteria', ()
   const allChecked = mockItems.map((it) => ({ ...it, checked: true }));
   assert.strictEqual(formatForGoogleKeep(allChecked, { uncheckedOnly: true }), '');
   assert.strictEqual(formatForGoogleKeep([]), '');
+});
+
+test('splitIntoKeepBatches splits items into equal batches when exceeding maxItemsPerBatch', () => {
+  const manyItems: ShoppingItem[] = Array.from({ length: 110 }, (_, i) => ({
+    id: `item-${i}`,
+    name: `Ingredient item ${i + 1}`,
+    raw: `Ingredient item ${i + 1}`,
+    category: 'Produce',
+    checked: false,
+    addedAt: '2026-09-26T12:00:00Z'
+  }));
+
+  // Batch size 50 -> 3 batches (50, 50, 10)
+  const batches = splitIntoKeepBatches(manyItems, { maxItemsPerBatch: 50 });
+  assert.strictEqual(batches.length, 3);
+  assert.strictEqual(batches[0].itemsCount, 50);
+  assert.strictEqual(batches[1].itemsCount, 50);
+  assert.strictEqual(batches[2].itemsCount, 10);
+  assert.strictEqual(batches[0].label, 'Batch 1 of 3');
+  assert.strictEqual(batches[1].label, 'Batch 2 of 3');
+  assert.strictEqual(batches[2].label, 'Batch 3 of 3');
+  assert.ok(batches[0].text.includes('Ingredient item 1'));
+  assert.ok(batches[0].text.includes('Ingredient item 50'));
+  assert.ok(!batches[0].text.includes('Ingredient item 51'));
+});
+
+test('splitIntoKeepBatches returns single batch when items count is below threshold', () => {
+  const batches = splitIntoKeepBatches(mockItems, { maxItemsPerBatch: 50 });
+  assert.strictEqual(batches.length, 1);
+  assert.strictEqual(batches[0].itemsCount, 2); // 2 unchecked items
+  assert.strictEqual(batches[0].label, 'All Items');
 });
 
 test('GOOGLE_KEEP_URL is valid', () => {

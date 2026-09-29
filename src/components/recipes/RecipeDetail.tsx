@@ -54,6 +54,8 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   const [showMealPlanMenu, setShowMealPlanMenu] = useState(false);
   const [copiedNotice, setCopiedNotice] = useState<string | null>(null);
   const [addedToCartNotice, setAddedToCartNotice] = useState(false);
+  const [isAddToListModalOpen, setIsAddToListModalOpen] = useState(false);
+  const [selectedIngIdsForCart, setSelectedIngIdsForCart] = useState<Set<string>>(new Set());
 
   const scaleFactor = servings / baseServings;
 
@@ -71,10 +73,42 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
     setCheckedSteps(next);
   };
 
-  const handleAddAllToCart = async () => {
-    await addIngredientsFromRecipe(recipe, scaleFactor);
+  const openAddToListModal = () => {
+    // If some ingredients are checked off on the page (meaning user has them on hand),
+    // pre-select only the needed (unchecked) items. If none or all are checked, pre-select all.
+    const needed = recipe.ingredients
+      .filter((ing) => !checkedIngredients.has(ing.id))
+      .map((ing) => ing.id);
+
+    if (checkedIngredients.size > 0 && needed.length > 0) {
+      setSelectedIngIdsForCart(new Set(needed));
+    } else {
+      setSelectedIngIdsForCart(new Set(recipe.ingredients.map((ing) => ing.id)));
+    }
+    setIsAddToListModalOpen(true);
+  };
+
+  const toggleModalIngSelection = (id: string) => {
+    const next = new Set(selectedIngIdsForCart);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIngIdsForCart(next);
+  };
+
+  const handleConfirmAddToList = async () => {
+    if (selectedIngIdsForCart.size === 0) return;
+    const count = await addIngredientsFromRecipe(
+      recipe,
+      scaleFactor,
+      Array.from(selectedIngIdsForCart)
+    );
+    setIsAddToListModalOpen(false);
     setAddedToCartNotice(true);
-    setTimeout(() => setAddedToCartNotice(false), 2500);
+    setCopiedNotice(`Added ${count} ingredients to your Shopping List!`);
+    setTimeout(() => {
+      setAddedToCartNotice(false);
+      setCopiedNotice(null);
+    }, 3000);
   };
 
   const handleShare = async () => {
@@ -523,11 +557,11 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
             </div>
 
             <button
-              onClick={handleAddAllToCart}
+              onClick={openAddToListModal}
               className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all ${
                 addedToCartNotice
                   ? 'bg-emerald-50 border-emerald-300 text-emerald-700 dark:bg-emerald-950/40'
-                  : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-50'
+                  : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'
               }`}
             >
               {addedToCartNotice ? (
@@ -538,7 +572,12 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
               ) : (
                 <>
                   <ShoppingBag className="w-3.5 h-3.5 text-brand-600" />
-                  <span>Add to List</span>
+                  <span>
+                    Add to List
+                    {checkedIngredients.size > 0 && checkedIngredients.size < recipe.ingredients.length
+                      ? ` (${recipe.ingredients.length - checkedIngredients.size} needed)`
+                      : ''}
+                  </span>
                 </>
               )}
             </button>
@@ -811,6 +850,157 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
         </div>
 
       </footer>
+
+      {/* Modal: Select Ingredients to Add to Shopping List */}
+      {isAddToListModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[88vh] flex flex-col animate-in zoom-in-95">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-serif font-bold text-lg text-stone-900 dark:text-stone-100 flex items-center gap-2">
+                  <ShoppingBag className="w-5 h-5 text-brand-600" />
+                  <span>Add Ingredients to Shopping List</span>
+                </h3>
+                <p className="text-xs text-stone-400 mt-0.5">
+                  Uncheck ingredients you already have on hand ({servings} {servings === 1 ? 'serving' : 'servings'})
+                </p>
+              </div>
+              <button
+                onClick={() => setIsAddToListModalOpen(false)}
+                className="p-1 rounded-lg text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Quick Selection Toolbar */}
+            <div className="flex items-center justify-between gap-2 pt-1 text-xs">
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedIngIdsForCart(new Set(recipe.ingredients.map((i) => i.id)))
+                  }
+                  className="px-2.5 py-1 rounded-lg font-medium bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+                >
+                  Select All ({recipe.ingredients.length})
+                </button>
+
+                {checkedIngredients.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const needed = recipe.ingredients
+                        .filter((i) => !checkedIngredients.has(i.id))
+                        .map((i) => i.id);
+                      setSelectedIngIdsForCart(new Set(needed));
+                    }}
+                    className="px-2.5 py-1 rounded-lg font-semibold bg-brand-50 dark:bg-brand-950/50 text-brand-700 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-900/50 transition-colors"
+                  >
+                    Needed Only ({recipe.ingredients.length - checkedIngredients.size})
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedIngIdsForCart(new Set())}
+                  className="px-2.5 py-1 rounded-lg font-medium text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition-colors"
+                >
+                  Clear
+                </button>
+              </div>
+
+              <span className="text-xs text-stone-400 font-medium">
+                {selectedIngIdsForCart.size} of {recipe.ingredients.length} selected
+              </span>
+            </div>
+
+            {/* Ingredients Selection List */}
+            <div className="flex-1 overflow-y-auto divide-y divide-stone-100 dark:divide-stone-800 pr-1 space-y-2">
+              {groupedIngredients.map((group, gIdx) => (
+                <div key={group.section || `modal-group-${gIdx}`} className="pt-2">
+                  {group.section && (
+                    <h4 className="font-serif font-bold text-xs uppercase tracking-wider text-brand-700 dark:text-brand-400 mb-1.5 px-1">
+                      {renderMarkdownInline(group.section)}
+                    </h4>
+                  )}
+                  <div className="space-y-1">
+                    {group.items.map((ing) => {
+                      const isSelected = selectedIngIdsForCart.has(ing.id);
+                      const isOnPageChecked = checkedIngredients.has(ing.id);
+                      const scaledText = scaleIngredientQuantity(ing.raw, scaleFactor);
+
+                      return (
+                        <div
+                          key={ing.id}
+                          onClick={() => toggleModalIngSelection(ing.id)}
+                          className={`py-2 px-2.5 rounded-xl cursor-pointer flex items-center justify-between gap-3 transition-colors ${
+                            isSelected
+                              ? 'bg-brand-50/70 dark:bg-brand-950/40 border border-brand-200/80 dark:border-brand-900/50'
+                              : 'hover:bg-stone-50 dark:hover:bg-stone-800/60 border border-transparent'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
+                                isSelected
+                                  ? 'bg-brand-600 border-brand-600 text-white'
+                                  : 'border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800'
+                              }`}
+                            >
+                              {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                            </div>
+                            <span
+                              className={`text-xs font-medium leading-snug ${
+                                isSelected
+                                  ? 'text-stone-900 dark:text-stone-100'
+                                  : 'text-stone-500 dark:text-stone-400'
+                              }`}
+                            >
+                              {renderMarkdownInline(scaledText)}
+                            </span>
+                          </div>
+
+                          {isOnPageChecked && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-medium shrink-0">
+                              On Hand
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-stone-100 dark:border-stone-800">
+              <button
+                type="button"
+                onClick={() => setIsAddToListModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmAddToList}
+                disabled={selectedIngIdsForCart.size === 0}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 disabled:opacity-40 disabled:pointer-events-none text-white text-xs font-bold shadow-md shadow-brand-500/20 active:scale-95 transition-all"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>
+                  Add {selectedIngIdsForCart.size}{' '}
+                  {selectedIngIdsForCart.size === 1 ? 'Item' : 'Items'} to List
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </article>
   );

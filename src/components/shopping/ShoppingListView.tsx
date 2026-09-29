@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useShopping } from '../../context/ShoppingContext';
 import { ShoppingItem } from '../../types/recipe';
-import { formatForGoogleKeep, openGoogleKeep } from '../../services/shoppingFormat';
+import { splitIntoKeepBatches, openGoogleKeep } from '../../services/shoppingFormat';
 import { renderMarkdownInline } from '../../services/inlineMarkdown';
 
 const AISLES: ShoppingItem['category'][] = [
@@ -56,13 +56,18 @@ export const ShoppingListView: React.FC = () => {
   const [isKeepModalOpen, setIsKeepModalOpen] = useState(false);
   const [keepUncheckedOnly, setKeepUncheckedOnly] = useState(true);
   const [keepIncludeCategories, setKeepIncludeCategories] = useState(false);
+  const [selectedBatchIndex, setSelectedBatchIndex] = useState(0);
 
-  const keepPreviewText = useMemo(() => {
-    return formatForGoogleKeep(items, {
+  const keepBatches = useMemo(() => {
+    return splitIntoKeepBatches(items, {
       uncheckedOnly: keepUncheckedOnly,
-      includeCategories: keepIncludeCategories
+      includeCategories: keepIncludeCategories,
+      maxItemsPerBatch: 50
     });
   }, [items, keepUncheckedOnly, keepIncludeCategories]);
+
+  const activeBatch = keepBatches[selectedBatchIndex] || keepBatches[0];
+  const keepPreviewText = activeBatch?.text || '';
 
   const handleAddNewItem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,15 +102,22 @@ export const ShoppingListView: React.FC = () => {
   const handleCopyAndOpenKeep = () => {
     if (!keepPreviewText) return;
     navigator.clipboard.writeText(keepPreviewText);
-    setCopiedNotice('✓ Checklist copied! Opening Google Keep...');
-    setTimeout(() => setCopiedNotice(null), 3000);
+    if (keepBatches.length > 1) {
+      setCopiedNotice(`✓ ${activeBatch.label} copied! Paste in Keep.`);
+      if (selectedBatchIndex < keepBatches.length - 1) {
+        setSelectedBatchIndex(selectedBatchIndex + 1);
+      }
+    } else {
+      setCopiedNotice('✓ Checklist copied! Opening Google Keep...');
+    }
+    setTimeout(() => setCopiedNotice(null), 3500);
     openGoogleKeep();
   };
 
   const handleCopyKeepText = () => {
     if (!keepPreviewText) return;
     navigator.clipboard.writeText(keepPreviewText);
-    setCopiedNotice('✓ Google Keep checklist copied to clipboard!');
+    setCopiedNotice(`✓ ${activeBatch?.label || 'List'} copied to clipboard!`);
     setTimeout(() => setCopiedNotice(null), 2500);
   };
 
@@ -114,7 +126,7 @@ export const ShoppingListView: React.FC = () => {
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
-          title: 'Grocery List',
+          title: activeBatch?.label ? `Grocery List - ${activeBatch.label}` : 'Grocery List',
           text: keepPreviewText
         });
         return;
@@ -426,17 +438,49 @@ export const ShoppingListView: React.FC = () => {
               </div>
             </div>
 
+            {/* Batch Selector if multiple batches */}
+            {keepBatches.length > 1 && (
+              <div className="p-3 bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-2xl space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-amber-950 dark:text-amber-200">
+                    📦 Split into {keepBatches.length} Batches (50 items max per note)
+                  </span>
+                  <span className="text-amber-800/80 dark:text-amber-400 text-[11px]">
+                    Part {selectedBatchIndex + 1} of {keepBatches.length}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  {keepBatches.map((b, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setSelectedBatchIndex(idx)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                        selectedBatchIndex === idx
+                          ? 'bg-amber-500 text-stone-950 shadow-xs'
+                          : 'bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-amber-100 dark:hover:bg-stone-700'
+                      }`}
+                    >
+                      {b.label} ({b.itemsCount})
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Text Preview Box */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs text-stone-500 dark:text-stone-400">
-                <span className="font-semibold">Text Preview:</span>
+                <span className="font-semibold">
+                  {keepBatches.length > 1 ? `${activeBatch?.label || 'Batch'} Preview:` : 'Text Preview:'}
+                </span>
                 <button
                   type="button"
                   onClick={handleCopyKeepText}
                   className="hover:text-brand-600 dark:hover:text-brand-400 inline-flex items-center gap-1 font-medium"
                 >
                   <Copy className="w-3 h-3" />
-                  <span>Copy text</span>
+                  <span>Copy {keepBatches.length > 1 ? 'batch text' : 'text'}</span>
                 </button>
               </div>
               <pre className="p-3 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl text-xs font-mono text-stone-700 dark:text-stone-300 max-h-36 overflow-y-auto whitespace-pre-wrap">
@@ -453,7 +497,11 @@ export const ShoppingListView: React.FC = () => {
                 className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-stone-950 text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Lightbulb className="w-4 h-4 fill-stone-950" />
-                <span>Copy & Open Google Keep</span>
+                <span>
+                  {keepBatches.length > 1
+                    ? `Copy ${activeBatch?.label || 'Batch'} & Open Keep`
+                    : 'Copy & Open Google Keep'}
+                </span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </button>
 
