@@ -323,55 +323,56 @@ export const MealPlannerView: React.FC<MealPlannerViewProps> = ({
               </button>
             </div>
 
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search recipe by title, category, or tag..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-8 py-2 rounded-xl text-xs bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                autoFocus
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
+            {/* Filter Controls Row: Search Input & Category Dropdown */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search recipe by title, category, or tag..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-8 py-2 rounded-xl text-xs bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  autoFocus
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
 
-            {/* Category Filter Pills */}
-            {categories.length > 0 && (
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-                <button
-                  onClick={() => setSelectedCategory('all')}
-                  className={`px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-colors ${
-                    selectedCategory === 'all'
-                      ? 'bg-brand-600 text-white'
-                      : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
+              {/* Category Dropdown Selector matching recipes interface */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-xs text-stone-500 dark:text-stone-400 font-medium whitespace-nowrap">
+                  Cuisine:
+                </span>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className={`px-3 py-2 rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 transition-colors ${
+                    selectedCategory !== 'all'
+                      ? 'border-brand-500 bg-brand-50/70 text-brand-900 dark:bg-brand-950/40 dark:border-brand-600 dark:text-brand-200 font-semibold'
+                      : 'border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-300'
                   }`}
                 >
-                  All ({recipes.length})
-                </button>
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-colors ${
-                      selectedCategory.toLowerCase() === cat.toLowerCase()
-                        ? 'bg-brand-600 text-white'
-                        : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+                  <option value="all">All Cuisines ({recipes.length})</option>
+                  {categories.map((cat) => {
+                    const count = recipes.filter(
+                      (r) => r.category.toLowerCase() === cat.toLowerCase()
+                    ).length;
+                    return (
+                      <option key={cat} value={cat}>
+                        {cat} ({count})
+                      </option>
+                    );
+                  })}
+                </select>
               </div>
-            )}
+            </div>
 
             {/* Recipes List */}
             <div className="flex-1 overflow-y-auto divide-y divide-stone-100 dark:divide-stone-800 pr-1">
