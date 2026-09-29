@@ -1,24 +1,36 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { MealPlanDay, Recipe } from '../types/recipe';
+import { MealPlanDay, MealType, Recipe } from '../types/recipe';
 import { getMealPlansFromDB, saveMealPlansToDB } from '../services/storage';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+function normalizeRecipeList(val: unknown): string[] {
+  if (Array.isArray(val)) {
+    return val.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+  }
+  if (typeof val === 'string' && val.trim().length > 0) {
+    return [val.trim()];
+  }
+  return [];
+}
 
 function getDefaultWeekPlan(): MealPlanDay[] {
   return DAYS_OF_WEEK.map((dayName, idx) => ({
     date: `day-${idx}`,
     dayName,
-    breakfast: undefined,
-    lunch: undefined,
-    dinner: undefined,
+    breakfast: [],
+    lunch: [],
+    dinner: [],
     notes: ''
   }));
 }
 
 interface MealPlanContextValue {
   mealPlans: MealPlanDay[];
-  setMealForDay: (dayName: string, mealType: 'breakfast' | 'lunch' | 'dinner', recipeId?: string) => Promise<void>;
-  clearDayMeal: (dayName: string, mealType: 'breakfast' | 'lunch' | 'dinner') => Promise<void>;
+  addRecipeToMeal: (dayName: string, mealType: MealType, recipeId: string) => Promise<void>;
+  removeRecipeFromMeal: (dayName: string, mealType: MealType, recipeId: string, index?: number) => Promise<void>;
+  setMealForDay: (dayName: string, mealType: MealType, recipeId?: string) => Promise<void>;
+  clearDayMeal: (dayName: string, mealType: MealType) => Promise<void>;
   clearEntireWeek: () => Promise<void>;
   addAllMealsToShoppingList: (
     recipes: Recipe[],
@@ -34,19 +46,28 @@ export const MealPlanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     getMealPlansFromDB().then((stored) => {
       if (stored.length > 0) {
-        // Ensure all 7 days exist
+        // Ensure all 7 days exist and normalize any legacy string values to arrays
         const map = new Map(stored.map((p) => [p.dayName, p]));
         const merged = DAYS_OF_WEEK.map((day, idx) => {
-          return (
-            map.get(day) || {
-              date: `day-${idx}`,
+          const existing = map.get(day);
+          if (existing) {
+            return {
+              date: existing.date || `day-${idx}`,
               dayName: day,
-              breakfast: undefined,
-              lunch: undefined,
-              dinner: undefined,
-              notes: ''
-            }
-          );
+              breakfast: normalizeRecipeList(existing.breakfast),
+              lunch: normalizeRecipeList(existing.lunch),
+              dinner: normalizeRecipeList(existing.dinner),
+              notes: existing.notes || ''
+            };
+          }
+          return {
+            date: `day-${idx}`,
+            dayName: day,
+            breakfast: [],
+            lunch: [],
+            dinner: [],
+            notes: ''
+          };
         });
         setMealPlans(merged);
       }
@@ -58,16 +79,18 @@ export const MealPlanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     await saveMealPlansToDB(plans);
   }, []);
 
-  const setMealForDay = async (
+  const addRecipeToMeal = async (
     dayName: string,
-    mealType: 'breakfast' | 'lunch' | 'dinner',
-    recipeId?: string
+    mealType: MealType,
+    recipeId: string
   ) => {
+    if (!recipeId) return;
     const updated = mealPlans.map((day) => {
       if (day.dayName === dayName) {
+        const currentList = day[mealType] || [];
         return {
           ...day,
-          [mealType]: recipeId
+          [mealType]: [...currentList, recipeId]
         };
       }
       return day;
@@ -75,8 +98,52 @@ export const MealPlanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     await saveAndSet(updated);
   };
 
-  const clearDayMeal = async (dayName: string, mealType: 'breakfast' | 'lunch' | 'dinner') => {
-    await setMealForDay(dayName, mealType, undefined);
+  const removeRecipeFromMeal = async (
+    dayName: string,
+    mealType: MealType,
+    recipeId: string,
+    index?: number
+  ) => {
+    const updated = mealPlans.map((day) => {
+      if (day.dayName === dayName) {
+        const currentList = day[mealType] || [];
+        const nextList =
+          typeof index === 'number'
+            ? currentList.filter((_, i) => i !== index)
+            : currentList.filter((id) => id !== recipeId);
+        return {
+          ...day,
+          [mealType]: nextList
+        };
+      }
+      return day;
+    });
+    await saveAndSet(updated);
+  };
+
+  const setMealForDay = async (
+    dayName: string,
+    mealType: MealType,
+    recipeId?: string
+  ) => {
+    if (!recipeId) {
+      await clearDayMeal(dayName, mealType);
+    } else {
+      await addRecipeToMeal(dayName, mealType, recipeId);
+    }
+  };
+
+  const clearDayMeal = async (dayName: string, mealType: MealType) => {
+    const updated = mealPlans.map((day) => {
+      if (day.dayName === dayName) {
+        return {
+          ...day,
+          [mealType]: []
+        };
+      }
+      return day;
+    });
+    await saveAndSet(updated);
   };
 
   const clearEntireWeek = async () => {
@@ -91,9 +158,9 @@ export const MealPlanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const plannedRecipeIds = new Set<string>();
 
     mealPlans.forEach((day) => {
-      if (day.breakfast) plannedRecipeIds.add(day.breakfast);
-      if (day.lunch) plannedRecipeIds.add(day.lunch);
-      if (day.dinner) plannedRecipeIds.add(day.dinner);
+      (day.breakfast || []).forEach((id) => plannedRecipeIds.add(id));
+      (day.lunch || []).forEach((id) => plannedRecipeIds.add(id));
+      (day.dinner || []).forEach((id) => plannedRecipeIds.add(id));
     });
 
     let totalAdded = 0;
@@ -111,6 +178,8 @@ export const MealPlanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     <MealPlanContext.Provider
       value={{
         mealPlans,
+        addRecipeToMeal,
+        removeRecipeFromMeal,
         setMealForDay,
         clearDayMeal,
         clearEntireWeek,
@@ -129,4 +198,3 @@ export function useMealPlan(): MealPlanContextValue {
   }
   return context;
 }
-

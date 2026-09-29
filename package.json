@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "node --experimental-strip-types --test src/services/markdownParser.test.ts src/services/shoppingFormat.test.ts src/services/inlineMarkdown.test.ts src/services/shareUrl.test.ts"
+    "test": "node --experimental-strip-types --test src/services/markdownParser.test.ts src/services/shoppingFormat.test.ts src/services/inlineMarkdown.test.ts src/services/shareUrl.test.ts src/services/mealPlan.test.ts"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",

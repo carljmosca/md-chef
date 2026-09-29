@@ -110,11 +110,14 @@ export interface ShoppingItem {
   addedAt: string;
 }
 
+export type MealType = 'breakfast' | 'lunch' | 'dinner';
+
 export interface MealPlanDay {
   date: string; // YYYY-MM-DD
   dayName: string; // "Monday", etc.
-  breakfast?: string; // recipeId
-  lunch?: string; // recipeId
-  dinner?: string; // recipeId
+  breakfast: string[]; // recipe IDs
+  lunch: string[]; // recipe IDs
+  dinner: string[]; // recipe IDs
   notes?: string;
 }
+

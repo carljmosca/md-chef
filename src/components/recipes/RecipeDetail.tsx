@@ -17,7 +17,8 @@ import {
   Timer as TimerIcon,
   RotateCcw,
   User,
-  Globe
+  Globe,
+  X
 } from 'lucide-react';
 import { Recipe } from '../../types/recipe';
 import { Badge } from '../common/Badge';
@@ -43,7 +44,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
 }) => {
   const { settings } = useSettings();
   const { addIngredientsFromRecipe } = useShopping();
-  const { setMealForDay } = useMealPlan();
+  const { addRecipeToMeal } = useMealPlan();
 
   const baseServings = recipe.frontmatter.servings || 4;
   const [servings, setServings] = useState<number>(baseServings);
@@ -270,24 +271,60 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
             </button>
 
             {showMealPlanMenu && (
-              <div className="absolute right-0 top-12 z-20 w-48 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl shadow-xl p-2 space-y-1">
-                <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider px-2 py-1">
-                  Assign Dinner To:
-                </p>
-                {daysOfWeek.map((day) => (
+              <div className="absolute right-0 top-12 z-20 w-64 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl shadow-xl p-3 space-y-2 animate-in fade-in zoom-in-95">
+                <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-700 pb-1.5 px-1">
+                  <p className="text-[11px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-wider">
+                    Add to Weekly Plan
+                  </p>
                   <button
-                    key={day}
-                    onClick={async () => {
-                      await setMealForDay(day, 'dinner', recipe.id);
-                      setShowMealPlanMenu(false);
-                      setCopiedNotice(`Added to ${day}'s Dinner!`);
-                      setTimeout(() => setCopiedNotice(null), 2500);
-                    }}
-                    className="w-full text-left px-2.5 py-1.5 text-xs text-stone-700 dark:text-stone-200 hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40 dark:hover:text-brand-300 rounded-lg transition-colors"
+                    onClick={() => setShowMealPlanMenu(false)}
+                    className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
                   >
-                    {day}
+                    <X className="w-3.5 h-3.5" />
                   </button>
-                ))}
+                </div>
+
+                <div className="space-y-1 max-h-72 overflow-y-auto pr-0.5">
+                  {daysOfWeek.map((day) => (
+                    <div
+                      key={day}
+                      className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700/50"
+                    >
+                      <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+                        {day}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        {(['breakfast', 'lunch', 'dinner'] as const).map((mealType) => {
+                          const label = mealType === 'breakfast' ? 'B' : mealType === 'lunch' ? 'L' : 'D';
+                          const fullLabel = mealType.charAt(0).toUpperCase() + mealType.slice(1);
+                          return (
+                            <button
+                              key={mealType}
+                              onClick={async () => {
+                                await addRecipeToMeal(day, mealType, recipe.id);
+                                setShowMealPlanMenu(false);
+                                setCopiedNotice(`Added to ${day} ${fullLabel}!`);
+                                setTimeout(() => setCopiedNotice(null), 2500);
+                              }}
+                              className="w-6 h-6 flex items-center justify-center text-[11px] font-bold rounded-md bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-brand-600 hover:text-white dark:hover:bg-brand-600 dark:hover:text-white transition-colors"
+                              title={`Add to ${day} ${fullLabel}`}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-1 border-t border-stone-100 dark:border-stone-700 text-[10px] text-stone-400 flex items-center justify-center gap-2">
+                  <span><strong>B</strong>: Breakfast</span>
+                  <span>•</span>
+                  <span><strong>L</strong>: Lunch</span>
+                  <span>•</span>
+                  <span><strong>D</strong>: Dinner</span>
+                </div>
               </div>
             )}
           </div>
