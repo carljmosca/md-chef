@@ -17,6 +17,62 @@ export interface KeepBatch {
 export const GOOGLE_KEEP_URL = 'https://keep.google.com/';
 export const DEFAULT_KEEP_BATCH_SIZE = 50;
 
+export function formatForGoogleKeepHtml(text: string): string {
+  const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[char]!);
+  const parts: string[] = [];
+  let listItems: string[] = [];
+
+  const flushList = () => {
+    if (listItems.length > 0) {
+      parts.push(`<ul>${listItems.join('')}</ul>`);
+      listItems = [];
+    }
+  };
+
+  for (const sourceLine of text.split(/\r?\n/)) {
+    const line = sourceLine.trim();
+    if (!line) {
+      flushList();
+    } else if (line.startsWith('🛒 ') || /^\[.+\]$/.test(line)) {
+      flushList();
+      parts.push(`<p><strong>${escapeHtml(line)}</strong></p>`);
+    } else {
+      listItems.push(`<li>${escapeHtml(line)}</li>`);
+    }
+  }
+  flushList();
+
+  return parts.join('');
+}
+
+export async function copyForGoogleKeep(text: string): Promise<void> {
+  if (typeof navigator === 'undefined' || !navigator.clipboard) {
+    throw new Error('Clipboard access is unavailable');
+  }
+
+  if (navigator.clipboard.write && typeof ClipboardItem !== 'undefined') {
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/plain': new Blob([text], { type: 'text/plain' }),
+          'text/html': new Blob([formatForGoogleKeepHtml(text)], { type: 'text/html' })
+        })
+      ]);
+      return;
+    } catch {
+      // Older browsers may expose write() without supporting HTML clipboard data.
+    }
+  }
+
+  await navigator.clipboard.writeText(text);
+}
+
 /**
  * Formats shopping list items specifically for pasting into Google Keep.
  * When pasting into Google Keep list notes, individual newline-separated lines

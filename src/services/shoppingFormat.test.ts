@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import { formatForGoogleKeep, splitIntoKeepBatches, GOOGLE_KEEP_URL } from './shoppingFormat.ts';
+import {
+  formatForGoogleKeep,
+  formatForGoogleKeepHtml,
+  splitIntoKeepBatches,
+  GOOGLE_KEEP_URL
+} from './shoppingFormat.ts';
 import type { ShoppingItem } from '../types/recipe.ts';
 
 const mockItems: ShoppingItem[] = [
@@ -33,6 +38,17 @@ const mockItems: ShoppingItem[] = [
 test('formatForGoogleKeep formats unchecked items as clean single lines by default', () => {
   const result = formatForGoogleKeep(mockItems);
   assert.strictEqual(result, '2 cups flour\n3 apples');
+});
+
+test('formatForGoogleKeepHtml creates separate escaped list entries', () => {
+  const result = formatForGoogleKeepHtml('Milk & eggs\n< flour >');
+  assert.strictEqual(result, '<ul><li>Milk &amp; eggs</li><li>&lt; flour &gt;</li></ul>');
+
+  const categorized = formatForGoogleKeepHtml('🛒 Grocery List\n\n[PRODUCE]\nApples');
+  assert.strictEqual(
+    categorized,
+    '<p><strong>🛒 Grocery List</strong></p><p><strong>[PRODUCE]</strong></p><ul><li>Apples</li></ul>'
+  );
 });
 
 test('formatForGoogleKeep includes checked items when uncheckedOnly is false', () => {

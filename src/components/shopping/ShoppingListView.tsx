@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useShopping } from '../../context/ShoppingContext';
 import { ShoppingItem } from '../../types/recipe';
-import { splitIntoKeepBatches, openGoogleKeep } from '../../services/shoppingFormat';
+import { splitIntoKeepBatches, copyForGoogleKeep, openGoogleKeep } from '../../services/shoppingFormat';
 import { renderMarkdownInline } from '../../services/inlineMarkdown';
 
 const AISLES: ShoppingItem['category'][] = [
@@ -99,9 +99,17 @@ export const ShoppingListView: React.FC = () => {
     handleCopyText();
   };
 
-  const handleCopyAndOpenKeep = () => {
+  const handleCopyAndOpenKeep = async () => {
     if (!keepPreviewText) return;
-    navigator.clipboard.writeText(keepPreviewText);
+    const copyPromise = copyForGoogleKeep(keepPreviewText);
+    openGoogleKeep();
+    try {
+      await copyPromise;
+    } catch {
+      setCopiedNotice('Could not copy the list. Check clipboard permissions.');
+      setTimeout(() => setCopiedNotice(null), 3500);
+      return;
+    }
     if (keepBatches.length > 1) {
       setCopiedNotice(`✓ ${activeBatch.label} copied! Paste in Keep.`);
       if (selectedBatchIndex < keepBatches.length - 1) {
@@ -111,12 +119,17 @@ export const ShoppingListView: React.FC = () => {
       setCopiedNotice('✓ Checklist copied! Opening Google Keep...');
     }
     setTimeout(() => setCopiedNotice(null), 3500);
-    openGoogleKeep();
   };
 
-  const handleCopyKeepText = () => {
+  const handleCopyKeepText = async () => {
     if (!keepPreviewText) return;
-    navigator.clipboard.writeText(keepPreviewText);
+    try {
+      await copyForGoogleKeep(keepPreviewText);
+    } catch {
+      setCopiedNotice('Could not copy the list. Check clipboard permissions.');
+      setTimeout(() => setCopiedNotice(null), 2500);
+      return;
+    }
     setCopiedNotice(`✓ ${activeBatch?.label || 'List'} copied to clipboard!`);
     setTimeout(() => setCopiedNotice(null), 2500);
   };
@@ -219,35 +232,39 @@ export const ShoppingListView: React.FC = () => {
       {/* Add Custom Item Input */}
       <form
         onSubmit={handleAddNewItem}
-        className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-3 shadow-xs flex flex-wrap sm:flex-nowrap items-center gap-2"
+        className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-3 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center gap-2"
       >
-        <input
-          type="text"
-          value={newItemName}
-          onChange={(e) => setNewItemName(e.target.value)}
-          placeholder="Add grocery item (e.g. olive oil, 2 lemons, milk)..."
-          className="flex-1 bg-transparent px-3 py-2 text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none"
-        />
+        <div className="relative flex-1">
+          <input
+            type="text"
+            value={newItemName}
+            onChange={(e) => setNewItemName(e.target.value)}
+            placeholder="Add grocery item (e.g. olive oil, 2 lemons, milk)..."
+            className="w-full px-3.5 py-2.5 sm:py-2 bg-stone-50 dark:bg-stone-800/90 border border-stone-300 dark:border-stone-600 rounded-xl text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors"
+          />
+        </div>
 
-        <select
-          value={selectedAisle}
-          onChange={(e) => setSelectedAisle(e.target.value as any)}
-          className="px-2.5 py-1.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs focus:outline-none"
-        >
-          {AISLES.map((a) => (
-            <option key={a} value={a}>
-              {AISLE_ICONS[a]} {a}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2 shrink-0">
+          <select
+            value={selectedAisle}
+            onChange={(e) => setSelectedAisle(e.target.value as any)}
+            className="flex-1 sm:flex-none px-3 py-2.5 sm:py-2 rounded-xl border border-stone-300 dark:border-stone-600 bg-stone-50 dark:bg-stone-800/90 text-stone-700 dark:text-stone-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 transition-colors"
+          >
+            {AISLES.map((a) => (
+              <option key={a} value={a}>
+                {AISLE_ICONS[a]} {a}
+              </option>
+            ))}
+          </select>
 
-        <button
-          type="submit"
-          className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-xs"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add</span>
-        </button>
+          <button
+            type="submit"
+            className="px-4 py-2.5 sm:py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1 shadow-xs shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add</span>
+          </button>
+        </div>
       </form>
 
       {/* Grouped Aisle Lists */}
@@ -371,7 +388,7 @@ export const ShoppingListView: React.FC = () => {
               </div>
               <ol className="list-decimal list-inside space-y-1 text-stone-600 dark:text-stone-300">
                 <li>Click <strong>"Copy & Open Google Keep"</strong> below.</li>
-                <li>In Google Keep, click the <strong>New list (checkbox symbol)</strong>, then paste (<kbd className="px-1 py-0.5 rounded bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[10px] font-mono">Cmd+V</kbd> / <kbd className="px-1 py-0.5 rounded bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[10px] font-mono">Ctrl+V</kbd>). Each line turns into an interactive checkable item!</li>
+                <li>In Google Keep, click the <strong>New list (checkbox symbol)</strong>, then paste (<kbd className="px-1 py-0.5 rounded bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[10px] font-mono">Cmd+V</kbd> / <kbd className="px-1 py-0.5 rounded bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[10px] font-mono">Ctrl+V</kbd>). Items are copied as separate checklist rows.</li>
               </ol>
             </div>
 
