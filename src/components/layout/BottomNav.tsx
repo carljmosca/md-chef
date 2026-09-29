@@ -1,14 +1,14 @@
 import React from 'react';
-import { BookOpen, Sparkles, ShoppingBag, Heart, Settings } from 'lucide-react';
+import { BookOpen, Calendar, ShoppingBag, Settings, Bot } from 'lucide-react';
 import { useShopping } from '../../context/ShoppingContext';
 
 interface BottomNavProps {
-  currentTab: 'recipes' | 'meals' | 'shopping' | 'favorites' | 'settings';
-  setCurrentTab: (tab: 'recipes' | 'meals' | 'shopping' | 'favorites' | 'settings') => void;
+  currentTab: 'recipes' | 'meals' | 'shopping' | 'ai' | 'favorites' | 'settings';
+  setCurrentTab: (tab: 'recipes' | 'meals' | 'shopping' | 'ai' | 'favorites' | 'settings') => void;
 }
 
 interface TabItem {
-  id: 'recipes' | 'meals' | 'shopping' | 'favorites' | 'settings';
+  id: 'recipes' | 'meals' | 'shopping' | 'ai' | 'favorites' | 'settings';
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
@@ -20,9 +20,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, setCurrentTab 
 
   const tabs: TabItem[] = [
     { id: 'recipes', label: 'Recipes', icon: BookOpen },
-    { id: 'meals', label: 'Meal Ideas', icon: Sparkles },
+    { id: 'ai', label: 'AI Chef', icon: Bot },
+    { id: 'meals', label: 'Planner', icon: Calendar },
     { id: 'shopping', label: 'Shopping', icon: ShoppingBag, badge: uncompletedCount > 0 ? uncompletedCount : undefined },
-    { id: 'favorites', label: 'Favorites', icon: Heart },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 

@@ -12,7 +12,10 @@ import {
   RotateCcw,
   ExternalLink,
   Download,
-  Globe
+  Globe,
+  Bot,
+  Copy,
+  Check
 } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
 import { useRecipes } from '../../context/RecipeContext';
@@ -42,6 +45,13 @@ export const SettingsView: React.FC = () => {
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
   const [storageInfo, setStorageInfo] = useState<{ usageMB: number; quotaMB: number } | null>(null);
   const [isPersisted, setIsPersisted] = useState<boolean>(false);
+  const [copiedMcpUrl, setCopiedMcpUrl] = useState(false);
+  const [copiedOpenApiUrl, setCopiedOpenApiUrl] = useState(false);
+
+  const mcpEndpointUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/mcp`
+    : 'http://localhost:5173/mcp';
+  const openApiUrl = `${mcpEndpointUrl}/openapi.json`;
 
   useEffect(() => {
     getStorageEstimate().then((est) => setStorageInfo(est));
@@ -470,6 +480,71 @@ export const SettingsView: React.FC = () => {
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset Local Cache & Re-seed Defaults</span>
           </button>
+        </div>
+      </section>
+
+      {/* HTTP / HTTPS WebMCP Integration Card */}
+      <section className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl p-6 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-3">
+          <h3 className="font-serif font-bold text-lg text-stone-900 dark:text-stone-100 flex items-center gap-2">
+            <Bot className="w-5 h-5 text-brand-600" />
+            <span>AI & WebMCP HTTP Integration</span>
+          </h3>
+          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+            HTTP / SSE Live
+          </span>
+        </div>
+
+        <p className="text-xs text-stone-500 dark:text-stone-400">
+          Connect your AI assistant (Claude, ChatGPT, Microsoft Copilot, or Google Gemini) directly to MD-Chef using the local HTTP endpoints below. Because all recipes, shopping lists, and meal plans are stored locally in your browser, the MCP server runs locally to protect hosting server resources and keep your personal culinary data private.
+        </p>
+
+        {/* Endpoint 1: Standard MCP HTTP / SSE Endpoint */}
+        <div className="space-y-1.5 p-3.5 bg-stone-50 dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-800">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] uppercase tracking-wider font-bold text-stone-600 dark:text-stone-300">
+              MCP HTTP / SSE Endpoint (Claude Desktop, Copilot, Gemini)
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(mcpEndpointUrl);
+                setCopiedMcpUrl(true);
+                setTimeout(() => setCopiedMcpUrl(false), 2000);
+              }}
+              className="flex items-center gap-1 text-[11px] font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+            >
+              {copiedMcpUrl ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copiedMcpUrl ? 'Copied!' : 'Copy URL'}</span>
+            </button>
+          </div>
+          <code className="block p-2 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-xl font-mono text-xs text-stone-800 dark:text-stone-200 overflow-x-auto">
+            {mcpEndpointUrl}
+          </code>
+        </div>
+
+        {/* Endpoint 2: OpenAPI Schema for ChatGPT Custom GPT Actions */}
+        <div className="space-y-1.5 p-3.5 bg-stone-50 dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-800">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] uppercase tracking-wider font-bold text-stone-600 dark:text-stone-300">
+              OpenAPI Schema (ChatGPT Custom GPT Actions)
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(openApiUrl);
+                setCopiedOpenApiUrl(true);
+                setTimeout(() => setCopiedOpenApiUrl(false), 2000);
+              }}
+              className="flex items-center gap-1 text-[11px] font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+            >
+              {copiedOpenApiUrl ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copiedOpenApiUrl ? 'Copied!' : 'Copy URL'}</span>
+            </button>
+          </div>
+          <code className="block p-2 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-xl font-mono text-xs text-stone-800 dark:text-stone-200 overflow-x-auto">
+            {openApiUrl}
+          </code>
         </div>
       </section>
     </div>

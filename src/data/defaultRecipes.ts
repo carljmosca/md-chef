@@ -1,5 +1,5 @@
-import { Recipe } from '../types/recipe';
-import { extractFrontmatter, parseRecipeBody } from '../services/markdownParser';
+import type { Recipe } from '../types/recipe.ts';
+import { extractFrontmatter, parseRecipeBody } from '../services/markdownParser.ts';
 
 interface SeedRecipe {
   path: string;

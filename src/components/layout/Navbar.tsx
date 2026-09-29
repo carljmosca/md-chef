@@ -1,10 +1,21 @@
 import React from 'react';
-import { ChefHat, RefreshCw, Search, BookOpen, Sparkles, ShoppingBag, Settings, CheckCircle2, AlertCircle } from 'lucide-react';
+import {
+  ChefHat,
+  RefreshCw,
+  Search,
+  BookOpen,
+  Calendar,
+  ShoppingBag,
+  Settings,
+  CheckCircle2,
+  AlertCircle,
+  Bot
+} from 'lucide-react';
 import { useRecipes } from '../../context/RecipeContext';
 
 interface NavbarProps {
-  currentTab: 'recipes' | 'meals' | 'shopping' | 'settings';
-  setCurrentTab: (tab: 'recipes' | 'meals' | 'shopping' | 'settings') => void;
+  currentTab: 'recipes' | 'meals' | 'shopping' | 'ai' | 'settings';
+  setCurrentTab: (tab: 'recipes' | 'meals' | 'shopping' | 'ai' | 'settings') => void;
   onOpenSearch: () => void;
 }
 
@@ -56,8 +67,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, onOpe
                 : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
             }`}
           >
-            <Sparkles className="w-4 h-4" />
-            Meal Ideas
+            <Calendar className="w-4 h-4" />
+            Meal Planner
           </button>
 
           <button
@@ -70,6 +81,23 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, onOpe
           >
             <ShoppingBag className="w-4 h-4" />
             Shopping List
+          </button>
+
+          <button
+            onClick={() => setCurrentTab('ai')}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              currentTab === 'ai'
+                ? 'bg-gradient-to-r from-brand-600 to-amber-600 text-white shadow-sm'
+                : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
+            }`}
+          >
+            <Bot className={`w-4 h-4 ${currentTab === 'ai' ? 'text-white' : 'text-brand-600 dark:text-brand-400'}`} />
+            <span>AI Chef</span>
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
+              currentTab === 'ai' ? 'bg-white/20 text-white' : 'bg-brand-100 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300'
+            }`}>
+              WebMCP
+            </span>
           </button>
 
           <button

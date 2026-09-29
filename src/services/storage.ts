@@ -1,4 +1,4 @@
-import { Recipe, AppSettings, ShoppingItem, MealPlanDay, SyncStats } from '../types/recipe';
+import type { Recipe, AppSettings, ShoppingItem, MealPlanDay, SyncStats } from '../types/recipe.ts';
 
 const DB_NAME = 'md_chef_db';
 const DB_VERSION = 1;

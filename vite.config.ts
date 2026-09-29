@@ -1,9 +1,36 @@
-import { defineConfig } from 'vite';
+import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+function mcpHttpPlugin(): Plugin {
+  return {
+    name: 'md-chef-mcp-http-server',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        if (req.url?.startsWith('/mcp') || req.url?.startsWith('/api/mcp')) {
+          const { handleNodeHttpRequest } = await import('./src/services/mcp/httpHandler.ts');
+          await handleNodeHttpRequest(req, res);
+          return;
+        }
+        next();
+      });
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        if (req.url?.startsWith('/mcp') || req.url?.startsWith('/api/mcp')) {
+          const { handleNodeHttpRequest } = await import('./src/services/mcp/httpHandler.ts');
+          await handleNodeHttpRequest(req, res);
+          return;
+        }
+        next();
+      });
+    }
+  };
+}
+
 export default defineConfig({
   plugins: [
+    mcpHttpPlugin(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',

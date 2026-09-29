@@ -28,6 +28,7 @@ import { buildRecipeShareUrl } from '../../services/shareUrl';
 import { useShopping } from '../../context/ShoppingContext';
 import { useMealPlan } from '../../context/MealPlanContext';
 import { useSettings } from '../../context/SettingsContext';
+import { NutritionFactsCard } from './NutritionFactsCard';
 
 interface RecipeDetailProps {
   recipe: Recipe;
@@ -530,6 +531,9 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
           </div>
         )}
       </header>
+ 
+      {/* WebMCP Nutrition Analysis Panel */}
+      <NutritionFactsCard recipe={recipe} servings={servings} />
 
       {/* Main Two-Column Content: Ingredients Checklist & Step Directions */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

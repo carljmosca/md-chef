@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SettingsProvider } from './context/SettingsContext';
 import { RecipeProvider, useRecipes } from './context/RecipeContext';
-import { ShoppingProvider } from './context/ShoppingContext';
-import { MealPlanProvider } from './context/MealPlanContext';
+import { ShoppingProvider, useShopping } from './context/ShoppingContext';
+import { MealPlanProvider, useMealPlan } from './context/MealPlanContext';
 import { Navbar } from './components/layout/Navbar';
 import { BottomNav } from './components/layout/BottomNav';
 import { RecipeGrid } from './components/recipes/RecipeGrid';
@@ -13,12 +13,15 @@ import { ShoppingListView } from './components/shopping/ShoppingListView';
 import { SettingsView } from './components/settings/SettingsView';
 import { QuickSearchModal } from './components/common/QuickSearchModal';
 import { InstallPrompt } from './components/common/InstallPrompt';
+import { AIChefView } from './components/ai/AIChefView';
+import { registerAllWebMCPTools } from './services/webmcp/recipeTools';
 
 const AppContent: React.FC = () => {
-  const [currentTab, setCurrentTab] = useState<'recipes' | 'meals' | 'shopping' | 'favorites' | 'settings'>('recipes');
+  const [currentTab, setCurrentTab] = useState<'recipes' | 'meals' | 'shopping' | 'ai' | 'favorites' | 'settings'>('recipes');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   const {
+    recipes,
     activeRecipe,
     setActiveRecipe,
     activeCookingRecipe,
@@ -27,8 +30,21 @@ const AppContent: React.FC = () => {
     setShowFavoritesOnly
   } = useRecipes();
 
+  const { addIngredientsFromRecipe, addItem } = useShopping();
+  const { setMealForDay } = useMealPlan();
+
+  // Register WebMCP Tools in browser context
+  useEffect(() => {
+    registerAllWebMCPTools({
+      getRecipes: () => recipes,
+      addIngredientsFromRecipe,
+      addCustomShoppingItem: addItem,
+      setMealForDay
+    });
+  }, [recipes, addIngredientsFromRecipe, addItem, setMealForDay]);
+
   // Tab switch handler
-  const handleTabChange = (tab: 'recipes' | 'meals' | 'shopping' | 'favorites' | 'settings') => {
+  const handleTabChange = (tab: 'recipes' | 'meals' | 'shopping' | 'ai' | 'favorites' | 'settings') => {
     setActiveRecipe(null); // Return to list view
     if (tab === 'favorites') {
       setShowFavoritesOnly(true);
@@ -83,6 +99,17 @@ const AppContent: React.FC = () => {
             )}
 
             {currentTab === 'shopping' && <ShoppingListView />}
+
+            {currentTab === 'ai' && (
+              <AIChefView
+                onSelectRecipe={(r) => {
+                  setActiveRecipe(r);
+                  window.location.hash = `#/recipe/${encodeURIComponent(r.path)}`;
+                }}
+                onCookRecipe={(r) => setActiveCookingRecipe(r)}
+                onNavigateToTab={(t) => handleTabChange(t)}
+              />
+            )}
 
             {currentTab === 'settings' && <SettingsView />}
           </>
