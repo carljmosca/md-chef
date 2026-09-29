@@ -101,15 +101,15 @@ export const ShoppingListView: React.FC = () => {
 
   const handleCopyAndOpenKeep = async () => {
     if (!keepPreviewText) return;
-    const copyPromise = copyForGoogleKeep(keepPreviewText);
-    openGoogleKeep();
     try {
-      await copyPromise;
+      await copyForGoogleKeep(keepPreviewText);
     } catch {
       setCopiedNotice('Could not copy the list. Check clipboard permissions.');
       setTimeout(() => setCopiedNotice(null), 3500);
       return;
     }
+
+    openGoogleKeep();
     if (keepBatches.length > 1) {
       setCopiedNotice(`✓ ${activeBatch.label} copied! Paste in Keep & click 📌 to pin first.`);
       if (selectedBatchIndex < keepBatches.length - 1) {

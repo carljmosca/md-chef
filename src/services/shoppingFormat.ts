@@ -52,25 +52,43 @@ export function formatForGoogleKeepHtml(text: string): string {
 }
 
 export async function copyForGoogleKeep(text: string): Promise<void> {
-  if (typeof navigator === 'undefined' || !navigator.clipboard) {
-    throw new Error('Clipboard access is unavailable');
-  }
+  if (typeof navigator !== 'undefined' && navigator.clipboard) {
+    if (navigator.clipboard.write && typeof ClipboardItem !== 'undefined') {
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'text/plain': new Blob([text], { type: 'text/plain' }),
+            'text/html': new Blob([formatForGoogleKeepHtml(text)], { type: 'text/html' })
+          })
+        ]);
+        return;
+      } catch {
+        // Fall back to plain text
+      }
+    }
 
-  if (navigator.clipboard.write && typeof ClipboardItem !== 'undefined') {
     try {
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          'text/plain': new Blob([text], { type: 'text/plain' }),
-          'text/html': new Blob([formatForGoogleKeepHtml(text)], { type: 'text/html' })
-        })
-      ]);
+      await navigator.clipboard.writeText(text);
       return;
     } catch {
-      // Older browsers may expose write() without supporting HTML clipboard data.
+      // Fall back to execCommand below
     }
   }
 
-  await navigator.clipboard.writeText(text);
+  if (typeof document !== 'undefined') {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const success = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (success) return;
+  }
+
+  throw new Error('Clipboard access is unavailable');
 }
 
 /**
