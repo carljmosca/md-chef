@@ -81,7 +81,7 @@ Users do **not** need to install anything locally, run a command line, or keep a
 
 ---
 
-### 🔌 Connecting Claude Desktop, ChatGPT, Copilot, and Gemini
+### 🔌 Connecting Claude Desktop, ChatGPT, Copilot, Gemini, and MCP Inspector
 
 #### 1. Claude Desktop (Anthropic)
 Claude Desktop connects directly to the public remote MCP SSE endpoint:
@@ -100,14 +100,29 @@ Claude Desktop connects directly to the public remote MCP SSE endpoint:
    ```
 3. Restart Claude Desktop. Claude now directly queries your recipe collection, searches by ingredient, inspects full recipes, and calculates nutritional facts with zero local setup!
 
-#### 2. ChatGPT (OpenAI)
+#### 2. Official MCP Inspector (Developer Testing & Debugging)
+Test and debug all culinary tools interactively using the official [Model Context Protocol Inspector](https://github.com/modelcontextprotocol/inspector):
+1. Launch the inspector from your terminal:
+   ```bash
+   npx @modelcontextprotocol/inspector
+   ```
+2. In the inspector browser UI:
+   - Select **Transport Type**: `SSE`
+   - Enter **URL**:
+     ```text
+     https://<your-app>.netlify.app/mcp/sse
+     ```
+   - Click **Connect**
+3. Click **List Tools** to inspect schemas and execute tools (e.g. `search_recipes`, `compute_nutrition`) with live JSON-RPC request and response inspection.
+
+#### 3. ChatGPT (OpenAI)
 Connect ChatGPT to MD-Chef using **Custom GPT Actions**:
 1. In ChatGPT, create or edit a Custom GPT and click **Add Action**.
 2. Click **Import from URL** and paste your public OpenAPI URL:
    `https://<your-app>.netlify.app/mcp/openapi.json`
 3. ChatGPT imports all recipe search, nutrition, and shopping list tools for instant interactive cooking assistance.
 
-#### 3. Microsoft Copilot & Edge
+#### 4. Microsoft Copilot & Edge
 - **Microsoft Edge Copilot**: Open MD-Chef in Microsoft Edge and open the Copilot sidebar. Copilot reads the page context and `document.modelContext` directly inside your browser tab.
 - **VS Code / GitHub Copilot**: Configure the public MCP endpoint in your settings:
    ```json
@@ -122,7 +137,7 @@ Connect ChatGPT to MD-Chef using **Custom GPT Actions**:
    }
    ```
 
-#### 4. Google Gemini
+#### 5. Google Gemini
 - **Chrome Built-in AI / Gemini Nano (`window.ai`)**:
   Chrome 128+ with Prompt API runs Gemini Nano on-device. With the W3C WebMCP flag enabled, Gemini Nano binds directly to `navigator.modelContext` / `document.modelContext`, querying the cookbook with 0ms network latency.
 - **Gemini Web / API Clients**:
