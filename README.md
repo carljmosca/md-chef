@@ -69,54 +69,53 @@ A sleek, responsive Progressive Web App (PWA) built with **React**, **TypeScript
 
 ---
 
-## 🤖 WebMCP & Local HTTP Integration Guide
+## 🤖 Public MCP & WebMCP Integration Guide
 
-Because MD-Chef is a client-first application, all recipes, personal edits, shopping checklists, and meal plans live in **your browser's IndexedDB**. 
+MD-Chef deploys a **public MCP (Model Context Protocol) and OpenAPI server** directly alongside the web application on Netlify (using Netlify Functions). 
 
-To protect hosting servers from heavy computation and preserve complete user data privacy, the MCP server is designed for **local client-side execution**:
+Users do **not** need to install anything locally, run a command line, or keep a dev server running. Simply connect Claude Desktop, ChatGPT, Microsoft Copilot, or Google Gemini to the public endpoints:
 
-- **Local MCP Endpoint**: `http://localhost:5173/mcp`
-- **Local MCP SSE Stream**: `http://localhost:5173/mcp/sse`
-- **Local OpenAPI Schema**: `http://localhost:5173/mcp/openapi.json`
-- **Non-Local Guard**: Requests from non-loopback IPs receive a `403 Forbidden`, ensuring zero external load on remote hosting infrastructure.
+- **Public MCP SSE Stream URL**: `https://<your-app>.netlify.app/mcp/sse`
+- **Public MCP JSON-RPC Endpoint**: `https://<your-app>.netlify.app/mcp`
+- **Public OpenAPI 3.0 Schema**: `https://<your-app>.netlify.app/mcp/openapi.json`
 
 ---
 
-### 🔌 Connecting Claude, ChatGPT, Copilot, and Gemini
+### 🔌 Connecting Claude Desktop, ChatGPT, Copilot, and Gemini
 
-#### 1. Claude (Anthropic)
-Claude Desktop connects directly to the local HTTP/SSE endpoint:
-1. Open your Claude configuration file:
+#### 1. Claude Desktop (Anthropic)
+Claude Desktop connects directly to the public remote MCP SSE endpoint:
+1. Open your Claude Desktop configuration file:
    - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
    - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-2. Add the `md-chef` local HTTP endpoint:
+2. Add the `md-chef` remote MCP server:
    ```json
    {
      "mcpServers": {
        "md-chef": {
-         "url": "http://localhost:5173/mcp"
+         "url": "https://<your-app>.netlify.app/mcp/sse"
        }
      }
    }
    ```
-3. Restart Claude Desktop. Claude now communicates with your local MD-Chef instance with zero external server traffic!
+3. Restart Claude Desktop. Claude now directly queries your recipe collection, searches by ingredient, inspects full recipes, and calculates nutritional facts with zero local setup!
 
 #### 2. ChatGPT (OpenAI)
 Connect ChatGPT to MD-Chef using **Custom GPT Actions**:
 1. In ChatGPT, create or edit a Custom GPT and click **Add Action**.
-2. Click **Import from URL** and paste your local OpenAPI URL:
-   `http://localhost:5173/mcp/openapi.json`
-3. ChatGPT imports all recipe search, nutrition, and shopping list tools for local interaction.
+2. Click **Import from URL** and paste your public OpenAPI URL:
+   `https://<your-app>.netlify.app/mcp/openapi.json`
+3. ChatGPT imports all recipe search, nutrition, and shopping list tools for instant interactive cooking assistance.
 
 #### 3. Microsoft Copilot & Edge
-- **Microsoft Edge Copilot**: Open MD-Chef in Microsoft Edge and open the Copilot sidebar. Copilot reads the page context and `document.modelContext` directly inside your browser tab without making any server requests.
-- **VS Code / GitHub Copilot**: Configure the local HTTP endpoint in settings:
+- **Microsoft Edge Copilot**: Open MD-Chef in Microsoft Edge and open the Copilot sidebar. Copilot reads the page context and `document.modelContext` directly inside your browser tab.
+- **VS Code / GitHub Copilot**: Configure the public MCP endpoint in your settings:
    ```json
    {
      "mcp": {
        "servers": {
          "md-chef": {
-           "url": "http://localhost:5173/mcp"
+           "url": "https://<your-app>.netlify.app/mcp"
          }
        }
      }
@@ -125,9 +124,9 @@ Connect ChatGPT to MD-Chef using **Custom GPT Actions**:
 
 #### 4. Google Gemini
 - **Chrome Built-in AI / Gemini Nano (`window.ai`)**:
-  Chrome 128+ with Prompt API runs Gemini Nano on-device. With the W3C WebMCP flag enabled, Gemini Nano binds directly to `navigator.modelContext` / `document.modelContext`, querying the in-memory cookbook with 0ms network latency and zero server load.
+  Chrome 128+ with Prompt API runs Gemini Nano on-device. With the W3C WebMCP flag enabled, Gemini Nano binds directly to `navigator.modelContext` / `document.modelContext`, querying the cookbook with 0ms network latency.
 - **Gemini Web / API Clients**:
-  Connect to your local instance at `http://localhost:5173/mcp`.
+  Connect to `https://<your-app>.netlify.app/mcp` (or `/mcp/sse`).
 
 ---
 

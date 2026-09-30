@@ -233,10 +233,16 @@ export function executeTool(name: string, args: any, customRecipes?: Recipe[]): 
   }
 }
 
+export const CORS_HEADERS: Record<string, string> = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-session-id, *'
+};
+
 /**
  * Generates an OpenAPI 3.0 JSON schema for ChatGPT Custom GPT Actions
  */
-export function getOpenApiSpec(baseUrl: string = 'http://localhost:5173'): any {
+export function getOpenApiSpec(baseUrl: string = 'https://md-chef.netlify.app'): any {
   return {
     openapi: '3.0.0',
     info: {
@@ -287,34 +293,221 @@ export function getOpenApiSpec(baseUrl: string = 'http://localhost:5173'): any {
   };
 }
 
-export function isLocalRequest(req: any): boolean {
-  const remoteIp = req.socket?.remoteAddress || req.connection?.remoteAddress || '';
-  const host = (req.headers?.host || '').toLowerCase();
-  const forwardedFor = req.headers?.['x-forwarded-for'];
-
-  if (forwardedFor && !forwardedFor.startsWith('127.') && !forwardedFor.startsWith('::1')) {
-    return false;
+/**
+ * Web Standards Request/Response Handler (for Netlify Functions v2, Edge, Cloudflare, Fetch API)
+ */
+export async function handleWebRequest(
+  req: Request,
+  defaultBaseUrl: string = 'https://md-chef.netlify.app'
+): Promise<Response> {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: CORS_HEADERS
+    });
   }
 
-  return (
-    remoteIp === '127.0.0.1' ||
-    remoteIp === '::1' ||
-    remoteIp === '::ffff:127.0.0.1' ||
-    !remoteIp || // test or in-memory mock
-    host.startsWith('localhost') ||
-    host.startsWith('127.0.0.1') ||
-    host.startsWith('[::1]')
-  );
+  const url = new URL(req.url, defaultBaseUrl);
+  const pathname = url.pathname.replace(/\/+$/, '') || '/';
+
+  // 1. OpenAPI Specification: /mcp/openapi.json or /api/openapi.json
+  if (pathname === '/mcp/openapi.json' || pathname === '/api/openapi.json' || pathname.endsWith('/openapi.json')) {
+    return new Response(JSON.stringify(getOpenApiSpec(url.origin), null, 2), {
+      status: 200,
+      headers: {
+        ...CORS_HEADERS,
+        'Content-Type': 'application/json; charset=utf-8'
+      }
+    });
+  }
+
+  // 2. SSE Stream: /mcp/sse or /mcp with Accept: text/event-stream
+  const accept = req.headers.get('accept') || '';
+  const isSSE = pathname === '/mcp/sse' || pathname.endsWith('/sse') || (pathname === '/mcp' && accept.includes('text/event-stream'));
+
+  if (req.method === 'GET' && isSSE) {
+    const sessionId = `session-${Date.now()}`;
+    const encoder = new TextEncoder();
+    let interval: any;
+
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode(`event: endpoint\ndata: ${url.origin}/mcp?sessionId=${sessionId}\n\n`));
+        interval = setInterval(() => {
+          try {
+            controller.enqueue(encoder.encode(': keepalive\n\n'));
+          } catch {
+            clearInterval(interval);
+          }
+        }, 15000);
+        if (interval && typeof interval === 'object' && typeof (interval as any).unref === 'function') {
+          (interval as any).unref();
+        }
+      },
+      cancel() {
+        if (interval) clearInterval(interval);
+      }
+    });
+
+    return new Response(stream, {
+      status: 200,
+      headers: {
+        ...CORS_HEADERS,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive'
+      }
+    });
+  }
+
+  // 3. GET /mcp or /api/mcp: returns server metadata and list of tools as JSON
+  if (req.method === 'GET') {
+    return new Response(
+      JSON.stringify(
+        {
+          name: 'md-chef-mcp',
+          version: '1.0.0',
+          protocol: 'MCP HTTP / JSON-RPC 2.0',
+          endpoints: {
+            jsonrpc: `${url.origin}/mcp`,
+            sse: `${url.origin}/mcp/sse`,
+            openapi: `${url.origin}/mcp/openapi.json`
+          },
+          tools: MCP_TOOLS
+        },
+        null,
+        2
+      ),
+      {
+        status: 200,
+        headers: {
+          ...CORS_HEADERS,
+          'Content-Type': 'application/json; charset=utf-8'
+        }
+      }
+    );
+  }
+
+  // 4. POST /mcp or /api/mcp: JSON-RPC 2.0 tool execution
+  if (req.method === 'POST') {
+    let payload: any;
+    try {
+      payload = await req.json();
+    } catch {
+      return new Response(
+        JSON.stringify({
+          jsonrpc: '2.0',
+          error: { code: -32700, message: 'Parse error: Invalid JSON' }
+        }),
+        {
+          status: 400,
+          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json; charset=utf-8' }
+        }
+      );
+    }
+
+    const { id, method, params } = payload || {};
+
+    if (method === 'notifications/initialized') {
+      return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
+
+    if (method === 'initialize') {
+      return new Response(
+        JSON.stringify({
+          jsonrpc: '2.0',
+          id: id ?? null,
+          result: {
+            protocolVersion: '2024-11-05',
+            capabilities: { tools: {} },
+            serverInfo: { name: 'md-chef-mcp', version: '1.0.0' }
+          }
+        }),
+        {
+          status: 200,
+          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json; charset=utf-8' }
+        }
+      );
+    }
+
+    if (method === 'ping') {
+      return new Response(
+        JSON.stringify({ jsonrpc: '2.0', id: id ?? null, result: {} }),
+        {
+          status: 200,
+          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json; charset=utf-8' }
+        }
+      );
+    }
+
+    if (method === 'tools/list') {
+      return new Response(
+        JSON.stringify({ jsonrpc: '2.0', id: id ?? null, result: { tools: MCP_TOOLS } }),
+        {
+          status: 200,
+          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json; charset=utf-8' }
+        }
+      );
+    }
+
+    if (method === 'tools/call') {
+      const { name, arguments: toolArgs } = params || {};
+      try {
+        const toolResult = executeTool(name, toolArgs || {});
+        return new Response(
+          JSON.stringify({
+            jsonrpc: '2.0',
+            id: id ?? null,
+            result: {
+              content: [{ type: 'text', text: JSON.stringify(toolResult, null, 2) }]
+            }
+          }),
+          {
+            status: 200,
+            headers: { ...CORS_HEADERS, 'Content-Type': 'application/json; charset=utf-8' }
+          }
+        );
+      } catch (err: any) {
+        return new Response(
+          JSON.stringify({
+            jsonrpc: '2.0',
+            id: id ?? null,
+            result: {
+              isError: true,
+              content: [{ type: 'text', text: err?.message || String(err) }]
+            }
+          }),
+          {
+            status: 200,
+            headers: { ...CORS_HEADERS, 'Content-Type': 'application/json; charset=utf-8' }
+          }
+        );
+      }
+    }
+
+    return new Response(
+      JSON.stringify({
+        jsonrpc: '2.0',
+        id: id ?? null,
+        error: { code: -32601, message: `Method not found: ${method}` }
+      }),
+      {
+        status: 404,
+        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json; charset=utf-8' }
+      }
+    );
+  }
+
+  return new Response('Not Found', { status: 404, headers: CORS_HEADERS });
 }
 
 /**
- * HTTP Request Handler for Node.js / Connect / Vite middleware
+ * Public HTTP Request Handler for Node.js / Connect servers
  */
 export async function handleNodeHttpRequest(
   req: any,
   res: any,
-  baseUrl: string = 'http://localhost:5173',
-  options: { localOnly?: boolean } = { localOnly: true }
+  baseUrl: string = 'https://md-chef.netlify.app'
 ) {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -327,24 +520,11 @@ export async function handleNodeHttpRequest(
     return;
   }
 
-  // Local-only protection: keep load off remote hosting server and protect client data
-  if (options.localOnly !== false && !isLocalRequest(req)) {
-    res.statusCode = 403;
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.end(
-      JSON.stringify({
-        error: 'Forbidden',
-        message: 'MD-Chef WebMCP server is restricted to local calls (localhost) to protect server resources and preserve client data privacy.'
-      })
-    );
-    return;
-  }
-
   const url = new URL(req.url || '/', baseUrl);
   const pathname = url.pathname.replace(/\/+$/, '') || '/';
 
   // 1. OpenAPI Specification: /mcp/openapi.json or /api/openapi.json
-  if (pathname === '/mcp/openapi.json' || pathname === '/api/openapi.json') {
+  if (pathname === '/mcp/openapi.json' || pathname === '/api/openapi.json' || pathname.endsWith('/openapi.json')) {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.statusCode = 200;
     res.end(JSON.stringify(getOpenApiSpec(url.origin), null, 2));
@@ -352,12 +532,12 @@ export async function handleNodeHttpRequest(
   }
 
   // 2. SSE Stream: /mcp/sse or /mcp with Accept: text/event-stream
-  const accept = req.headers['accept'] || '';
+  const accept = req.headers?.['accept'] || '';
   const isSSE = pathname === '/mcp/sse' || (pathname === '/mcp' && accept.includes('text/event-stream'));
 
   if (req.method === 'GET' && isSSE) {
     res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
     res.statusCode = 200;
 
@@ -369,6 +549,9 @@ export async function handleNodeHttpRequest(
     const interval = setInterval(() => {
       res.write(': keepalive\n\n');
     }, 20000);
+    if (interval && typeof interval === 'object' && typeof (interval as any).unref === 'function') {
+      (interval as any).unref();
+    }
 
     req.on('close', () => {
       clearInterval(interval);
@@ -413,12 +596,18 @@ export async function handleNodeHttpRequest(
         const payload = JSON.parse(body || '{}');
         const { id, method, params } = payload;
 
+        if (method === 'notifications/initialized') {
+          res.statusCode = 204;
+          res.end();
+          return;
+        }
+
         if (method === 'initialize') {
           res.statusCode = 200;
           res.end(
             JSON.stringify({
               jsonrpc: '2.0',
-              id,
+              id: id ?? null,
               result: {
                 protocolVersion: '2024-11-05',
                 capabilities: { tools: {} },
@@ -431,13 +620,13 @@ export async function handleNodeHttpRequest(
 
         if (method === 'ping') {
           res.statusCode = 200;
-          res.end(JSON.stringify({ jsonrpc: '2.0', id, result: {} }));
+          res.end(JSON.stringify({ jsonrpc: '2.0', id: id ?? null, result: {} }));
           return;
         }
 
         if (method === 'tools/list') {
           res.statusCode = 200;
-          res.end(JSON.stringify({ jsonrpc: '2.0', id, result: { tools: MCP_TOOLS } }));
+          res.end(JSON.stringify({ jsonrpc: '2.0', id: id ?? null, result: { tools: MCP_TOOLS } }));
           return;
         }
 
@@ -449,7 +638,7 @@ export async function handleNodeHttpRequest(
             res.end(
               JSON.stringify({
                 jsonrpc: '2.0',
-                id,
+                id: id ?? null,
                 result: {
                   content: [{ type: 'text', text: JSON.stringify(toolResult, null, 2) }]
                 }
@@ -460,7 +649,7 @@ export async function handleNodeHttpRequest(
             res.end(
               JSON.stringify({
                 jsonrpc: '2.0',
-                id,
+                id: id ?? null,
                 result: {
                   isError: true,
                   content: [{ type: 'text', text: err?.message || String(err) }]
@@ -475,7 +664,7 @@ export async function handleNodeHttpRequest(
         res.end(
           JSON.stringify({
             jsonrpc: '2.0',
-            id,
+            id: id ?? null,
             error: { code: -32601, message: `Method not found: ${method}` }
           })
         );

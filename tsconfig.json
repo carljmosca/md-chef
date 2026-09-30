@@ -18,5 +18,5 @@
     "esModuleInterop": true,
     "types": ["node"]
   },
-  "include": ["src"]
+  "include": ["src", "netlify"]
 }

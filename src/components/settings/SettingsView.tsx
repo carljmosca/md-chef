@@ -47,12 +47,28 @@ export const SettingsView: React.FC = () => {
   const [storageInfo, setStorageInfo] = useState<{ usageMB: number; quotaMB: number } | null>(null);
   const [isPersisted, setIsPersisted] = useState<boolean>(false);
   const [copiedMcpUrl, setCopiedMcpUrl] = useState(false);
+  const [copiedSseUrl, setCopiedSseUrl] = useState(false);
   const [copiedOpenApiUrl, setCopiedOpenApiUrl] = useState(false);
+  const [copiedClaudeConfig, setCopiedClaudeConfig] = useState(false);
 
   const mcpEndpointUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/mcp`
-    : 'http://localhost:5173/mcp';
+    : 'https://md-chef.netlify.app/mcp';
+  const sseEndpointUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/mcp/sse`
+    : 'https://md-chef.netlify.app/mcp/sse';
   const openApiUrl = `${mcpEndpointUrl}/openapi.json`;
+  const claudeConfigSnippet = JSON.stringify(
+    {
+      mcpServers: {
+        'md-chef': {
+          url: sseEndpointUrl
+        }
+      }
+    },
+    null,
+    2
+  );
 
   useEffect(() => {
     setFormData({
@@ -505,15 +521,15 @@ export const SettingsView: React.FC = () => {
         <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-3">
           <h3 className="font-serif font-bold text-lg text-stone-900 dark:text-stone-100 flex items-center gap-2">
             <Bot className="w-5 h-5 text-brand-600" />
-            <span>AI & WebMCP HTTP Integration</span>
+            <span>AI & Public MCP Integration</span>
           </h3>
           <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-            HTTP / SSE Live
+            Public Netlify MCP
           </span>
         </div>
 
         <p className="text-xs text-stone-500 dark:text-stone-400">
-          Connect your AI assistant (Claude, ChatGPT, Microsoft Copilot, or Google Gemini) directly to MD-Chef using the local HTTP endpoints below. Because all recipes, shopping lists, and meal plans are stored locally in your browser, the MCP server runs locally to protect hosting server resources and keep your personal culinary data private.
+          Connect your AI assistant (Claude Desktop, ChatGPT, Microsoft Copilot, or Google Gemini) directly to MD-Chef using the public cloud endpoints below. The MCP server is hosted alongside your web app on Netlify—no local installation, terminal, or background process required.
         </p>
 
         {/* In-App AI Chef Navigation Toggle */}
@@ -540,11 +556,59 @@ export const SettingsView: React.FC = () => {
           />
         </div>
 
-        {/* Endpoint 1: Standard MCP HTTP / SSE Endpoint */}
+        {/* Endpoint 1: Claude Desktop Configuration Snippet */}
         <div className="space-y-1.5 p-3.5 bg-stone-50 dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-800">
           <div className="flex items-center justify-between">
             <span className="text-[11px] uppercase tracking-wider font-bold text-stone-600 dark:text-stone-300">
-              MCP HTTP / SSE Endpoint (Claude Desktop, Copilot, Gemini)
+              Claude Desktop Configuration (claude_desktop_config.json)
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(claudeConfigSnippet);
+                setCopiedClaudeConfig(true);
+                setTimeout(() => setCopiedClaudeConfig(false), 2000);
+              }}
+              className="flex items-center gap-1 text-[11px] font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+            >
+              {copiedClaudeConfig ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copiedClaudeConfig ? 'Copied Config!' : 'Copy Config'}</span>
+            </button>
+          </div>
+          <pre className="block p-2.5 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-xl font-mono text-xs text-stone-800 dark:text-stone-200 overflow-x-auto whitespace-pre">
+            {claudeConfigSnippet}
+          </pre>
+        </div>
+
+        {/* Endpoint 2: MCP SSE Stream URL */}
+        <div className="space-y-1.5 p-3.5 bg-stone-50 dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-800">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] uppercase tracking-wider font-bold text-stone-600 dark:text-stone-300">
+              MCP SSE Stream URL (Claude Desktop, Remote MCP Clients)
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(sseEndpointUrl);
+                setCopiedSseUrl(true);
+                setTimeout(() => setCopiedSseUrl(false), 2000);
+              }}
+              className="flex items-center gap-1 text-[11px] font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+            >
+              {copiedSseUrl ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copiedSseUrl ? 'Copied!' : 'Copy URL'}</span>
+            </button>
+          </div>
+          <code className="block p-2 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-xl font-mono text-xs text-stone-800 dark:text-stone-200 overflow-x-auto">
+            {sseEndpointUrl}
+          </code>
+        </div>
+
+        {/* Endpoint 3: Standard MCP HTTP JSON-RPC Endpoint */}
+        <div className="space-y-1.5 p-3.5 bg-stone-50 dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-800">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] uppercase tracking-wider font-bold text-stone-600 dark:text-stone-300">
+              MCP HTTP JSON-RPC Endpoint (Copilot, Gemini, REST/POST)
             </span>
             <button
               type="button"
@@ -564,7 +628,7 @@ export const SettingsView: React.FC = () => {
           </code>
         </div>
 
-        {/* Endpoint 2: OpenAPI Schema for ChatGPT Custom GPT Actions */}
+        {/* Endpoint 4: OpenAPI Schema for ChatGPT Custom GPT Actions */}
         <div className="space-y-1.5 p-3.5 bg-stone-50 dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-800">
           <div className="flex items-center justify-between">
             <span className="text-[11px] uppercase tracking-wider font-bold text-stone-600 dark:text-stone-300">
