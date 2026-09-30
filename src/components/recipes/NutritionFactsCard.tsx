@@ -31,8 +31,8 @@ export const NutritionFactsCard: React.FC<NutritionFactsCardProps> = ({ recipe, 
               <h3 className="font-serif font-bold text-sm text-stone-900 dark:text-stone-100">
                 Nutritional Breakdown
               </h3>
-              <span className="text-[10px] font-semibold uppercase tracking-wider bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 px-2 py-0.5 rounded-full border border-brand-200 dark:border-brand-800/60">
-                WebMCP Verified
+              <span className="text-[10px] font-semibold uppercase tracking-wider bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 px-2 py-0.5 rounded-full border border-stone-200 dark:border-stone-700">
+                USDA Reference
               </span>
             </div>
             <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
