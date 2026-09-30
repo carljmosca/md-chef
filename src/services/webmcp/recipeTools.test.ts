@@ -7,8 +7,11 @@ import type { Recipe } from '../../types/recipe.ts';
 const mockRecipes: Recipe[] = [
   {
     id: 'margherita-pizza',
+    filename: 'margherita-pizza.md',
     path: 'Italian/margherita-pizza.md',
     category: 'Italian',
+    sha: 'mock-pizza-sha',
+    updatedAt: '2026-09-29T12:00:00Z',
     rawContent: '',
     frontmatter: {
       title: 'Classic Margherita Pizza',
@@ -30,8 +33,11 @@ const mockRecipes: Recipe[] = [
   },
   {
     id: 'chicken-marsala',
+    filename: 'chicken-marsala.md',
     path: 'Italian/chicken-marsala.md',
     category: 'Italian',
+    sha: 'mock-marsala-sha',
+    updatedAt: '2026-09-29T12:00:00Z',
     rawContent: '',
     frontmatter: {
       title: 'Chicken Marsala',
