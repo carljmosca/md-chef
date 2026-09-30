@@ -50,12 +50,12 @@ A sleek, responsive Progressive Web App (PWA) built with **React**, **TypeScript
 - One-click copy formatted recipe text or direct URL hash deep-link (`#/recipe/Italian/chicken-marsala.md`).
 - Pre-filled email button (`mailto:`) with recipe ingredients and instructions.
 
-### 🤖 WebMCP & AI Culinary Suite (Local-First Architecture)
-- **Client-First & Zero Server Load**: MD-Chef is a Progressive Web App (PWA) where recipes, shopping lists, meal plans, and the USDA nutrition engine reside entirely in the **user's client browser (IndexedDB and memory)**. 
-- **Protected Local HTTP Endpoint**: To keep remote hosting free and protect your server from heavy AI scraping/computation, the built-in MCP HTTP server is **restricted to local calls (`localhost` / `127.0.0.1`)** with a built-in guard blocking non-local IP requests.
-- **Built-in AI Chef**: Conversational culinary assistant running in-app that searches your cookbook, calculates nutritional profiles, and automatically generates grocery checklists.
-- **OpenAPI 3.0 Specification**: Local `/mcp/openapi.json` endpoint ready to paste directly into ChatGPT Custom GPT Actions.
-- **11 Registered Culinary Tools**: Search recipes, inspect steps & ingredients, compute nutrition from raw ingredients, analyze recipe nutrition, and manage shopping lists.
+### 🤖 WebMCP & Public Cloud MCP Server
+- **Public Cloud MCP Server**: Deployed seamlessly on Netlify via Netlify Functions. Provides public Server-Sent Events (`/mcp/sse`), JSON-RPC 2.0 (`/mcp`), and OpenAPI 3.0 (`/mcp/openapi.json`) endpoints with zero user installation or command-line setup required.
+- **In-App AI Chef**: Optional conversational culinary assistant running directly in MD-Chef that searches your cookbook, calculates nutritional profiles, and generates grocery checklists. Can be toggled on or off in Settings.
+- **Client-Side & Offline Ready**: Fast, offline-first PWA where recipes, shopping lists, and meal plans sync to browser IndexedDB and memory.
+- **OpenAPI 3.0 Specification**: Public `/mcp/openapi.json` endpoint ready to import directly into ChatGPT Custom GPT Actions.
+- **Culinary Tools**: Search recipes, inspect steps & ingredients, compute nutrition from raw ingredients, analyze recipe nutrition, and manage shopping lists.
 
 ### 🥗 Offline Nutrition Calculation Engine
 - **USDA-Referenced Nutritional Profiles**: Instant, 100% offline estimation of calories, macronutrients, and micronutrients for any recipe or raw ingredient list.
@@ -185,6 +185,7 @@ npm test
 - **Framework**: React 18 with TypeScript
 - **Styling**: Tailwind CSS with custom culinary theme & dark mode
 - **Build Tool**: Vite 6 with `vite-plugin-pwa`
+- **Serverless & Public MCP**: Netlify Functions (v2) providing public MCP SSE & JSON-RPC endpoints
 - **Database**: IndexedDB (with `localStorage` fallback)
 - **Icons**: Lucide React
 - **Celebration FX**: Canvas Confetti
