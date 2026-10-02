@@ -35,8 +35,12 @@
   scrollbar-width: none;
 }
 
-/* iOS Safe Area Inset */
+/* iOS Safe Area Insets */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 1rem);
 }
+
 
